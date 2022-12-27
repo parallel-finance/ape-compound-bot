@@ -6,9 +6,6 @@ import path from "path"
 import fs from "fs"
 import { ContractAddress, types as LoggerTypes } from "@para-space/utils"
 import { utilsBox } from "@para-space/utils"
-import { ValidCompoundInfo } from "./types"
-import { fetchCompoundInfo } from "./fetch"
-import { claimAndCompound } from "./compound"
 import { keystore } from "@para-space/keystore"
 
 dotenv.config({ path: ".env" })
@@ -122,7 +119,7 @@ export namespace Runtime {
 
         let wallet: Wallet
         if (privateKey) {
-            wallet =  (privateKey.indexOf(" ") < 0 ? new Wallet(privateKey) : Wallet.fromMnemonic(privateKey))
+            wallet = (privateKey.indexOf(" ") < 0 ? new Wallet(privateKey) : Wallet.fromMnemonic(privateKey))
         } else {
             if (!keystoreName) throw new Error("Please give a keystore filename in .env");
 

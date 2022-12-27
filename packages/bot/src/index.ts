@@ -1,9 +1,8 @@
-import { logger, mapErrMsg, sleep } from "@para-space/utils"
+import { logger } from "@para-space/utils"
 import { claimAndCompound } from "./compound"
 import { fetchCompoundInfo } from "./fetch"
-import { runtime, Runtime } from "./runtime"
+import { Runtime } from "./runtime"
 import { ValidCompoundInfo } from "./types"
-import { types as LoggerTypes } from "@para-space/utils"
 
 async function main() {
     logger.info("Starting paraspace-ape-compound-bot")
