@@ -19,7 +19,7 @@
   },
   "include": [
     "./lib/**/*",
-    "./test/**/*",
+    "tests/**/*",
   ],
   "exclude": [
     ".github",

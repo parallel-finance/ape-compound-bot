@@ -9,6 +9,11 @@ async function main() {
         logger.info(`Your address: ${runtime.wallet.address}`)
 
         // TODO: @rjman-ljm: finish the bot logic here
+        const compoundInfos = {
+            userAssets: [],
+            users: [],
+        }
+        // const sendTxs = []
 
         logger.info("Stopping paraspace-ape-compound-bot")
     } catch (e) {
