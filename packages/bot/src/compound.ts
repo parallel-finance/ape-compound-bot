@@ -3,24 +3,27 @@ import { BigNumber } from "ethers";
 import { ParaspaceMM, Types } from "paraspace-api";
 import { Runtime, runtime } from "./runtime";
 import { CompoundInfo, ValidCompoundInfo } from "./types";
+import { cloneDeep } from "lodash"
 
 export async function claimAndCompound(
     compoundInfo: ValidCompoundInfo,
 ) {
-    logger.info("Try to claimAndCompound...")
-    for (const [collection, info] of Object.entries(compoundInfo)) {
+    const batches = splitCompoundInfos(compoundInfo, 30)
+    logger.info("Try to claimAndCompound, split into " + batches.length + " batches")
+    for (const batch of batches) {
+        const info: CompoundInfo = {
+            nftAsset: batch.nftAsset,
+            users: batch.users,
+            tokenIds: batch.tokenIds,
+            rawData: batch.rawData,
+        }
         try {
             const {
                 nftAsset,
                 users,
                 tokenIds,
             } = info
-            if (users.length === 0) {
-                logger.info(`No ${collection} to claim and compound`)
-                continue
-            }
 
-            logger.info(`collection: ${collection}`)
             logger.info(`nftAsset: ${nftAsset}`)
             logger.info(`users: ${users}`)
             logger.info(`tokenIds: ${tokenIds}`)
@@ -87,6 +90,24 @@ const claimApeAndCompoundWithSimulation = async (
     return [tx.hash, ""]
 }
 
+function compoundInfoToAlertMsgBody(info: CompoundInfo) {
+    const {
+        nftAsset,
+        users,
+        tokenIds,
+        rawData,
+    } = info
+
+    return [
+        { name: "signer", value: runtime.wallet.address },
+        { name: "collection", value: nftAsset },
+        { name: "users", value: users.join(",") },
+        { name: "tokenIds", value: tokenIds.join(",") },
+        { name: "rawData", value: JSON.stringify(rawData) },
+        { name: "task", value: JSON.stringify(info) },
+    ]
+}
+
 export async function resolveErrMsg(info: CompoundInfo, e: any) {
     const { wallet, networkName } = runtime
 
@@ -115,20 +136,55 @@ export async function resolveErrMsg(info: CompoundInfo, e: any) {
     })
 }
 
-function compoundInfoToAlertMsgBody(info: CompoundInfo) {
-    const {
-        nftAsset,
-        users,
-        tokenIds,
-        rawData,
-    } = info
+export function splitCompoundInfos(
+    compoundInfo: ValidCompoundInfo,
+    limit: number
+): CompoundInfo[] {
+    let splitCompoundInfos: CompoundInfo[] = []
+    for (const [collection, collectionInfo] of Object.entries(compoundInfo)) {
+        if (!compoundInfo || collectionInfo.users.length === 0) {
+            logger.info(`No ${collection} to claim and compound`)
+            continue
+        }
 
-    return [
-        { name: "signer", value: runtime.wallet.address },
-        { name: "collection", value: nftAsset },
-        { name: "users", value: users.join(",") },
-        { name: "tokenIds", value: tokenIds.join(",") },
-        { name: "rawData", value: JSON.stringify(rawData) },
-        { name: "task", value: JSON.stringify(info) },
-    ]
+        let users = cloneDeep(collectionInfo.users)
+        let tokenIds = cloneDeep(collectionInfo.tokenIds)
+        let batches = []
+
+        let tokenIdLimit = limit
+        let userIndex = 0
+        let totalTokenIds = tokenIds.reduce((acc, cur) => acc + cur.length, 0)
+        let batch: CompoundInfo = {
+            nftAsset: collectionInfo.nftAsset,
+            users: [],
+            tokenIds: [],
+            rawData: collectionInfo.rawData,
+        }
+        while (totalTokenIds > 0) {
+            let userTokenIds: string[] = tokenIds[userIndex].slice(0, tokenIdLimit)
+            tokenIds[userIndex] = tokenIds[userIndex].slice(tokenIdLimit)
+
+            batch.users.push(users[userIndex])
+            batch.tokenIds.push(userTokenIds)
+
+            tokenIdLimit -= userTokenIds.length
+            totalTokenIds -= userTokenIds.length
+
+            if (tokenIds[userIndex].length === 0) userIndex++
+            if (tokenIdLimit === 0 || totalTokenIds === 0) {
+                batches.push(batch)
+                batch = {
+                    nftAsset: collectionInfo.nftAsset,
+                    users: [],
+                    tokenIds: [],
+                    rawData: collectionInfo.rawData,
+                }
+                tokenIdLimit = limit
+            }
+        }
+
+        splitCompoundInfos.push(...batches)
+    }
+
+    return splitCompoundInfos
 }
