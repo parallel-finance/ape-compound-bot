@@ -1,4 +1,4 @@
-import { getPasswordFromLocalOrConsole, logger, sleep, UtilsBox } from "@para-space/utils"
+import { getPasswordFromLocalOrConsole, logger, UtilsBox } from "@para-space/utils"
 import { Environment, NetworkName, Provider } from "paraspace-api"
 
 import dotenv from "dotenv"
