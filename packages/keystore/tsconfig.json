@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "composite": false,
+    "declaration": true,
+    "declarationMap": false,
+    "lib": [
+      "es2020"
+    ],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "es2020",
+    "sourceMap": true,
+    "removeComments": false,
+    "outDir": "dist",
+    "esModuleInterop": true,
+    "strict": false,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": [
+    "./lib/**/*",
+    "./test/**/*",
+  ],
+  "exclude": [
+    ".github",
+    "coverage",
+    "dist",
+    "doc",
+    "keystore",
+    "node_modules",
+    "publish"
+  ]
+}

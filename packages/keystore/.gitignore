@@ -1,0 +1,17 @@
+# dependencies
+/node_modules
+
+# misc
+.DS_Store
+.env.*
+
+# IDE
+/.idea
+/.vscode
+
+# builders
+/dist
+/publish
+/keystore
+/coverage
+
