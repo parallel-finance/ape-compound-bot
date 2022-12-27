@@ -34,7 +34,7 @@ const getValidStakedTokens = async (): Promise<ValidTokens> => {
     await apeCoinStaking.getBaycStakes(runtime.contracts.nBAYC)
   )
     .filter((data) =>
-      data.unclaimed.gt(ethers.utils.parseEther(strategy.goerli.BAYC_TOKEN_PENDING_REWARD_LIMIT))
+      data.unclaimed.gt(ethers.utils.parseEther(strategy[runtime.networkName].BAYC_TOKEN_PENDING_REWARD_LIMIT))
     )
     .map((data) => ({
       pendingReward: data.unclaimed,
@@ -45,7 +45,7 @@ const getValidStakedTokens = async (): Promise<ValidTokens> => {
     await apeCoinStaking.getMaycStakes(runtime.contracts.nMAYC)
   )
     .filter((data) =>
-      data.unclaimed.gt(ethers.utils.parseEther(strategy.goerli.MAYC_TOKEN_PENDING_REWARD_LIMIT))
+      data.unclaimed.gt(ethers.utils.parseEther(strategy[runtime.networkName].MAYC_TOKEN_PENDING_REWARD_LIMIT))
     )
     .map((data) => ({
       pendingReward: data.unclaimed,
@@ -73,7 +73,7 @@ const filterByUserLimit = async (validTokens: ValidTokens): Promise<ValidUserAnd
       if (baycOwnerToTokenIds.has(owner)) {
         baycOwnerToTokenIds.get(owner)?.push(data);
       } else {
-        baycOwnerToTokenIds.set(owner, []);
+        baycOwnerToTokenIds.set(owner, [data]);
       }
     })
   );
@@ -88,7 +88,7 @@ const filterByUserLimit = async (validTokens: ValidTokens): Promise<ValidUserAnd
       if (maycOwnerToTokenIds.has(owner)) {
         maycOwnerToTokenIds.get(owner)?.push(data);
       } else {
-        maycOwnerToTokenIds.set(owner, []);
+        maycOwnerToTokenIds.set(owner, [data]);
       }
     })
   );
