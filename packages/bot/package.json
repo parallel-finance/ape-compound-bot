@@ -1,0 +1,30 @@
+{
+  "name": "@para-space/ape-compound-bot",
+  "version": "0.1.0",
+  "description": "",
+  "keywords": [
+    "ape"
+  ],
+  "main": "dist/index.js",
+  "author": "rjman-ljm <rjman.ljm@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rjman-ljm"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">= 14"
+  },
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "prebuild": "rimraf lib",
+    "build": "tsc -p tsconfig.build.json",
+    "build:docs": "typedoc --out docs src/ape-compound-bot.ts",
+    "test": "jest --config jest.config.ts --coverage",
+    "test:ci": "npm run lint && npm run test -- --no-cache"
+  },
+  "dependencies": {
+    "@para-space/keystore": "workspace:^0.1.0",
+    "@para-space/utils": "workspace:^0.1.0"
+  }
+}

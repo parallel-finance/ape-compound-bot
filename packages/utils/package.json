@@ -1,0 +1,87 @@
+{
+  "name": "@para-space/utils",
+  "author": "rjman-ljm",
+  "module": "dist/@para-space/utils.esm.js",
+  "version": "0.1.0",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "engines": {
+    "node": ">=10"
+  },
+  "scripts": {
+    "start": "tsdx watch",
+    "build": "tsdx build",
+    "build:docs": "typedoc --out docs src/*.ts",
+    "test": "tsdx test",
+    "size": "size-limit",
+    "analyze": "size-limit --why"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "tsdx lint"
+    }
+  },
+  "prettier": {
+    "printWidth": 100,
+    "tabWidth": 2,
+    "useTabs": false,
+    "singleQuote": false,
+    "semi": false,
+    "trailingComma": "none",
+    "bracketSpacing": true,
+    "arrowParens": "avoid",
+    "endOfLine": "auto"
+  },
+  "jest": {
+    "verbose": true,
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "/dist/",
+      "src/index.ts"
+    ]
+  },
+  "size-limit": [
+    {
+      "path": "dist/@para-space/utils.cjs.production.min.js",
+      "limit": "10 KB"
+    },
+    {
+      "path": "dist/@para-space/utils.esm.js",
+      "limit": "10 KB"
+    }
+  ],
+  "devDependencies": {
+    "@rollup/plugin-replace": "^5.0.2",
+    "@size-limit/preset-small-lib": "^8.1.0",
+    "husky": "^8.0.2",
+    "size-limit": "^8.1.0",
+    "tsdx": "^0.14.1",
+    "tslib": "^2.4.1"
+  },
+  "dependencies": {
+    "@types/bluebird": "^3.5.38",
+    "@types/fs-extra": "^9.0.13",
+    "@types/inquirer": "^8.2.5",
+    "@types/lodash": "^4.14.191",
+    "@types/lowdb": "^1.0.11",
+    "@types/single-line-log": "^1.1.0",
+    "aws-sdk": "^2.1282.0",
+    "axios": "^1.2.1",
+    "bluebird": "^3.7.2",
+    "commander": "^8.3.0",
+    "cosmiconfig": "^7.1.0",
+    "deployless-view": "^1.0.8",
+    "dotenv-expand": "^8.0.3",
+    "inquirer": "^8.2.5",
+    "moment": "^2.29.4",
+    "pino": "^8.8.0",
+    "pino-pretty": "^9.1.1",
+    "read-pkg": "^5.2.0",
+    "single-line-log": "^1.1.2"
+  }
+}
