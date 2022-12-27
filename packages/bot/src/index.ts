@@ -1,22 +1,20 @@
-import { logger } from "@para-space/utils"
-import { fetchUserAndTokenIds } from "./fetch"
+import { logger, mapErrMsg, sleep } from "@para-space/utils"
+import { claimAndCompound } from "./compound"
+import { fetchCompoundInfo } from "./fetch"
 import { runtime, Runtime } from "./runtime"
+import { ValidCompoundInfo } from "./types"
+import { types as LoggerTypes } from "@para-space/utils"
 
 async function main() {
-    try {
-        logger.info("Starting paraspace-ape-compound-bot")
-        await Runtime.initialize()
+    logger.info("Starting paraspace-ape-compound-bot")
 
-        logger.info(`Your address: ${runtime.wallet.address}`)
-
-        // TODO: @rjman-ljm: finish the bot logic here
-        await fetchUserAndTokenIds()
-
-        logger.info("Stopping paraspace-ape-compound-bot")
-    } catch (e) {
-        logger.error(`process error: ${e}`)
-        console.trace(e)
+    const worker = async () => {
+        const compoundInfo: ValidCompoundInfo = await fetchCompoundInfo()
+        await claimAndCompound(compoundInfo)
     }
+    await Runtime.run(worker)
+
+    logger.info("Stopping paraspace-ape-compound-bot")
 }
 
 main().then(() => process.exit(0))

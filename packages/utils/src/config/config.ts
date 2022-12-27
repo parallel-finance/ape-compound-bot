@@ -1,4 +1,4 @@
-import { getNumEnv, getStringEnv } from "../general/getEnv"
+import { getBooleanEnv, getNumEnv, getStringEnv } from "../general/getEnv"
 
 export interface NetworkConfig {
   environment: string
@@ -15,7 +15,7 @@ export interface WalletConfig {
 
 export interface GeneralConfig {
   scanInterval: number
-  healthCheckInterval: number
+  structuredLog: boolean
 }
 
 export interface AlertConfig {
@@ -47,7 +47,7 @@ export const getGlobalConfig = (): GlobalConfig => ({
   },
   general: {
     scanInterval: getNumEnv("SCAN_INTERVAL") || 0.5,
-    healthCheckInterval: getNumEnv("HEALTH_CHECK_INTERVAL") || 5000
+    structuredLog: getBooleanEnv("STRUCTURED_LOG"),
   },
   alert: {
     slackAppName: getStringEnv("SLACK_APP_NAME") || "",

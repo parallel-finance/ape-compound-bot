@@ -1,14 +1,15 @@
-import { getPasswordFromLocalOrConsole, logger, UtilsBox } from "@para-space/utils"
+import { Alert, getPasswordFromLocalOrConsole, logger, mapErrMsg, sleep, UtilsBox } from "@para-space/utils"
 import { Environment, NetworkName, ParaspaceMM, Provider, Types } from "paraspace-api"
-
 import dotenv from "dotenv"
 import { Wallet } from "ethers"
-import { keystore } from "@para-space/keystore"
 import path from "path"
 import fs from "fs"
-import { DefaultKeystoreDir } from "@para-space/keystore/dist/lib/params"
-import { KeystoreTypeDefault } from "@para-space/keystore/dist/lib/types"
-import { ContractAddress } from "@para-space/utils"
+import { ContractAddress, types as LoggerTypes } from "@para-space/utils"
+import { utilsBox } from "@para-space/utils"
+import { ValidCompoundInfo } from "./types"
+import { fetchCompoundInfo } from "./fetch"
+import { claimAndCompound } from "./compound"
+import { keystore } from "@para-space/keystore"
 
 dotenv.config({ path: ".env" })
 
@@ -21,10 +22,61 @@ export let runtime: {
         apeCoinStaking: ContractAddress
         pool: ContractAddress
     }
-    networkName: NetworkName
+    isMainnet: boolean,
+    networkName: NetworkName,
+    pagerduty: {
+        enable: boolean
+        webhook: string
+    }
+    slack: {
+        enable: boolean
+        appName: string
+        webhook: string
+    },
+    cloudWatch: {
+        enable: boolean
+    }
+    interval: {
+        scan: number
+    }
 }
 
 export namespace Runtime {
+    export async function run(worker: () => Promise<void>) {
+        await initialize()
+        logger.info(`Your address: ${runtime.wallet.address}`)
+
+        let retryCount = 5
+        while (true) {
+            try {
+                await worker()
+                heartBeat()
+                logger.debug(`don't worry, still alive... interval ${runtime.interval.scan / 60 / 1000} m`)
+            } catch (e) {
+                if (retryCount-- > 0) {
+                    logger.error(`process error: ${mapErrMsg(e)}`)
+                    console.trace(e)
+                } else {
+                    const errMsg = `Too many retry times, service failed to run... please check it. ${mapErrMsg(e)}}`
+                    logger.error(errMsg)
+
+                    sendPagerduty({
+                        payload: {
+                            summary: errMsg,
+                            severity: "warning",
+                            source: runtime.networkName,
+                            group: runtime.networkName,
+                        },
+                        event_action: "trigger",
+                        client: "paraspace-ape-compound-bot",
+                    })
+                }
+            }
+
+            await sleep(runtime.interval.scan)
+        }
+    }
+
     export async function initialize() {
         const envs = dotenv.config({ path: ".env" })
         UtilsBox.init(envs)
@@ -41,6 +93,16 @@ export namespace Runtime {
                 keystoreName,
                 plainPassword,
                 base64Password,
+            },
+            alert: {
+                slackAppName,
+                slackWebhook,
+                cloudWatchNameSpace,
+                pagerdutyWebhook,
+            },
+            general: {
+                scanInterval,
+                structuredLog
             }
         } = UtilsBox.getConfig()
 
@@ -64,7 +126,7 @@ export namespace Runtime {
         } else {
             if (!keystoreName) throw new Error("Please give a keystore filename in .env");
 
-            const keystorePath = path.resolve(keystoreDir || DefaultKeystoreDir + KeystoreTypeDefault, keystoreName.toLowerCase());
+            const keystorePath = path.resolve(keystoreDir || keystore.params.DefaultKeystoreDir + keystore.types.KeystoreTypeDefault, keystoreName.toLowerCase());
             if (!fs.existsSync(keystorePath)) throw new Error(`Keystore path is not found, ${keystorePath}`)
 
             let password = base64Password || plainPassword
@@ -73,7 +135,7 @@ export namespace Runtime {
             logger.info(`Unlocked keystore path: ${keystorePath}`)
             wallet = await keystore.InspectKeystoreWallet(
                 keystoreName,
-                KeystoreTypeDefault,
+                keystore.types.KeystoreTypeDefault,
                 password,
                 {
                     isBase64: !!base64Password,
@@ -81,6 +143,13 @@ export namespace Runtime {
             )
         }
 
+        const useSlack = !!slackWebhook
+        const useCloudWatch = !!cloudWatchNameSpace
+        const usePagerduty = !!pagerdutyWebhook
+        if (useSlack) {
+            await Alert.initSlackAlert()
+            UtilsBox.initAlarmLogger({ useCloudWatch, chain: networkName, structuredLog })
+        }
 
         runtime = {
             provider,
@@ -91,7 +160,56 @@ export namespace Runtime {
                 nBAYC: baycData.xTokenAddress,
                 nMAYC: maycData.xTokenAddress
             },
-            networkName: <NetworkName>networkName
+            networkName: <NetworkName>networkName,
+            isMainnet: [NetworkName.fork_mainnet, NetworkName.mainnet].includes(<NetworkName>networkName),
+            pagerduty: {
+                enable: usePagerduty,
+                webhook: pagerdutyWebhook
+            },
+            slack: {
+                enable: useSlack,
+                appName: slackAppName,
+                webhook: slackWebhook
+            },
+            cloudWatch: {
+                enable: useCloudWatch
+            },
+            interval: {
+                scan: scanInterval * 60 * 1000,
+            }
+        }
+    }
+
+    async function heartBeat() {
+        const metric = LoggerTypes.Metrics.ApeCompoundBotHealth
+        cloudwatch({
+            msg: "ApeCompoundBot:: new round",
+            metric: metric,
+            value: 1
+        })
+    }
+
+    export async function sendPagerduty(payload: LoggerTypes.PagerdutyParams) {
+        if (runtime.pagerduty.enable) {
+            if (!utilsBox.alarmLogger) {
+                logger.error("pagerdutyLogger not initialized, please check it")
+                return
+            }
+            utilsBox.alarmLogger.alert(runtime.pagerduty.webhook, payload)
+        } else {
+            // logger.warn("Pagerduty disabled, cannot send payload")
+        }
+    }
+
+    export async function cloudwatch(metricData: { msg: string; metric: string; value: any }) {
+        if (runtime.cloudWatch.enable) {
+            if (!utilsBox.alarmLogger) {
+                logger.error("alarm logger not initialized, please check it")
+                return
+            }
+            utilsBox.alarmLogger.info(metricData)
+        } else {
+            // logger.warn(`CloudWatch disabled, cannot send metric data ${metricData}`)
         }
     }
 }
