@@ -14,22 +14,6 @@
   "files": [
     "dist"
   ],
-  "jest": {
-    "verbose": true,
-    "collectCoverage": true,
-    "preset": "ts-jest",
-    "testEnvironment": "node",
-    "globals": {
-      "ts-jest": {
-        "packageJson": "../../package.json"
-      }
-    },
-    "coveragePathIgnorePatterns": [
-      "/node_modules/",
-      "/dist/",
-      "src/index.ts"
-    ]
-  },
   "scripts": {
     "clean": "rm -rf dist/*",
     "test": "jest --coverage --forceExit",
