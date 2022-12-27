@@ -1,6 +1,6 @@
 import { ethers } from "ethers"
 
-const convertToChecksumAddress = (address: string) => {
+export const convertToChecksumAddress = (address: string) => {
   try {
     if (address === "" || !address) return address
     return ethers.utils.getAddress(address?.toLowerCase())

@@ -1,4 +1,5 @@
 import { logger } from "@para-space/utils"
+import { fetchUserAndTokenIds } from "./fetch"
 import { runtime, Runtime } from "./runtime"
 
 async function main() {
@@ -9,6 +10,7 @@ async function main() {
         logger.info(`Your address: ${runtime.wallet.address}`)
 
         // TODO: @rjman-ljm: finish the bot logic here
+        await fetchUserAndTokenIds()
 
         logger.info("Stopping paraspace-ape-compound-bot")
     } catch (e) {
