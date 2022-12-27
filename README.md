@@ -34,23 +34,18 @@ You may need to run `pnpm build` before running the bot.
 
 The bot is configured via environment variables. You can find the list of environment variables in the [`.env.sample`](.env.sample) file.
 
-The `.env` file contains the following variables you need to configure:
-
+<details>
+<summary>The .env file contains the following variables you need to configure:</summary>
 - `ETH_ENDPOINT=<your-RPC-endpoint>`: The RPC endpoint of the Ethereum network you want to connect to. You can use [Infura](https://infura.io/) or [Alchemy](https://www.alchemy.com/) to get a free RPC endpoint.
 
 - wallet connection: the bot will use the wallet to sign transactions directly.
 
   - **private key**: you can give the bot a private key directly.
   - **keystore** and **password**: you can give the bot a keystore and the password of the keystore, the bot will unlock the keystore you encrypted with the password.
+</details>
 
-### How to start the bot
-
-`pnpm start`: run the bot via **private key** or **keystore**
-
-1. If you want to run the bot via **private key**, you need to set the `ETH_PRIVATE_KEY` environment variable.
-2. If you want to run the bot via **keystore**, you need to set the `KEYSTORE_DIR` and `KEYSTORE_NAME` environment variables. The console will ask you to enter the password of the keystore you set in [1. Create Keystore](#1-create-keystore)
-
-### Example
+<details>
+<summary>Example .env</summary>
 
 ```shell
 ETH_ENVIRONMENT=production
@@ -68,5 +63,13 @@ KEYSTORE_NAME=0x5D48a0512efE84C6Ed674481F774F285a85ab896
 # PASSWORD_BASE64=MTIzNDU2
 PASSWORD=123456
 ```
+</details>
+
+### How to start the bot
+
+`pnpm start`: run the bot via **private key** or **keystore**
+
+1. If you want to run the bot via **private key**, you need to set the `ETH_PRIVATE_KEY` environment variable.
+2. If you want to run the bot via **keystore**, you need to set the `KEYSTORE_DIR` and `KEYSTORE_NAME` environment variables. The console will ask you to enter the password of the keystore you set in [1. Create Keystore](#1-create-keystore)
 
 This project is [MIT Licensed](LICENSE).
