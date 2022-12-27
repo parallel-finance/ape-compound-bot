@@ -19,7 +19,6 @@ const getValidStakedTokens = async (): Promise<ValidTokens> => {
       pendingReward: data.unclaimed,
       tokenId: data.tokenId.toString(),
     }));
-  logger.info(`fetch valid bayc ids: ${validStakedBayc.length}`);
   const validStakedMayc: StakedToken[] = (
     await apeCoinStaking.getMaycStakes(runtime.contracts.nMAYC)
   )
@@ -30,7 +29,6 @@ const getValidStakedTokens = async (): Promise<ValidTokens> => {
       pendingReward: data.unclaimed,
       tokenId: data.tokenId.toString(),
     }));
-  logger.info(`fetch valid mayc ids: ${validStakedMayc.length}`);
   return {
     validBayc: validStakedBayc,
     validMayc: validStakedMayc,

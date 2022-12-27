@@ -25,8 +25,8 @@ export async function claimAndCompound(
             } = info
 
             logger.info(`nftAsset: ${nftAsset}`)
-            logger.info(`users: ${users}`)
-            logger.info(`tokenIds: ${tokenIds}`)
+            logger.info(`users: ${users.length}: ${users}`)
+            logger.info(`tokenIds: ${tokenIds.flat().length}: ${tokenIds}`)
             logger.info(`claimApeAndCompound..., signer address ${runtime.wallet.address}`)
 
             const [txHash, errMsg] = await claimApeAndCompoundWithSimulation(info)
@@ -76,7 +76,7 @@ const claimApeAndCompoundWithSimulation = async (
             const estimateGas: BigNumber = await pool.estimateGas.claimApeAndCompound(nftAsset, users, tokenIds)
             logger.info(`estimateGas claimApeAndCompound ${estimateGas.toString()}`)
             options = {
-                gasLimit: estimateGas.add("200000")
+                gasLimit: estimateGas.add("100000")
             }
         } catch (e) {
             const errMsg = `estimateGas claimApeAndCompound failed ${mapErrMsg(e)}`
