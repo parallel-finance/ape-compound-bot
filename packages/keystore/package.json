@@ -2,7 +2,7 @@
   "name": "@para-space/keystore",
   "version": "0.1.0",
   "description": "",
-  "author": "rjman-ljm",
+  "author": "@para-space",
   "license": "MIT",
   "keywords": [
     "keystore"
