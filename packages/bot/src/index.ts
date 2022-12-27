@@ -8,6 +8,8 @@ async function main() {
 
         logger.info(`Your address: ${runtime.wallet.address}`)
 
+        // TODO: @rjman-ljm: finish the bot logic here
+
         logger.info("Stopping paraspace-ape-compound-bot")
     } catch (e) {
         logger.error(`process error: ${e}`)
