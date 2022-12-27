@@ -40,8 +40,8 @@
   "dependencies": {
     "bignumber.js": "^9.1.1",
     "dotenv": "^16.0.3",
-    "paraspace-api": "^0.2.28",
-    "ethers": "5.7.2"
+    "ethers": "5.7.2",
+    "paraspace-api": "^0.2.28"
   },
   "devDependencies": {
     "@commitlint/cli": "17.0.3",

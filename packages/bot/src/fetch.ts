@@ -88,7 +88,6 @@ const filterByUserLimit = async (validTokens: ValidTokens): Promise<ValidCompoun
     }
   });
 
-
   maycOwnerToTokenIds.forEach((tokens: StakedToken[], owner: string) => {
     const userTotalReward = tokens
       .map((data) => data.pendingReward)
