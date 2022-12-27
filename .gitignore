@@ -5,6 +5,8 @@
 **/docs
 
 .env
+.env.advance
+keystore
 
 .nyc_output
 .DS_Store

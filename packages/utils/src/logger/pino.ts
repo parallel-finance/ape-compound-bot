@@ -4,6 +4,7 @@ import { AlarmLogger, AlarmLoggerConfig, PagerdutyParams } from "./types"
 import * as dotenv from "dotenv"
 import axios from 'axios'
 import CloudWatch, { MetricData, PutMetricDataInput } from "aws-sdk/clients/cloudwatch"
+import { getBooleanEnv } from "../general"
 
 dotenv.config({ path: ".env" })
 
@@ -65,7 +66,8 @@ export namespace CloudwatchClient {
 export const createAlarmLogger = (
   config: AlarmLoggerConfig = {
     useCloudWatch: false,
-    chain: process.env.ETH_NETWORK_NAME || "unknown"
+    chain: process.env.ETH_NETWORK_NAME || "unknown",
+    structuredLog: getBooleanEnv("STRUCTURED_LOG", false)
   }
 ): AlarmLogger => {
   if (config.useCloudWatch) CloudwatchClient.init()
@@ -94,7 +96,7 @@ export const createAlarmLogger = (
         metric: 100
       }
     },
-    process.env.DISABLE_STRUCTURED_LOG ? transport : undefined
+    config.structuredLog ? undefined : transport
   )
 
   const alarmLogger: AlarmLogger = Object.assign(logger, {

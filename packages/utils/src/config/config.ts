@@ -6,7 +6,7 @@ export interface NetworkConfig {
   endpoint: string
 }
 export interface WalletConfig {
-  address: string
+  keystoreName: string
   privateKey: string
   base64Password: string
   plainPassword: string
@@ -41,7 +41,7 @@ export const getGlobalConfig = (): GlobalConfig => ({
   wallet: {
     privateKey: getStringEnv("ETH_PRIVATE_KEY") || "",
     keystoreDir: getStringEnv("KEYSTORE_DIR") || "keystore/default",
-    address: getStringEnv("KEYSTORE_NAME") || "",
+    keystoreName: getStringEnv("KEYSTORE_NAME") || "",
     base64Password: getStringEnv("PASSWORD_BASE64") || "",
     plainPassword: getStringEnv("PASSWORD") || "",
   },

@@ -45,4 +45,5 @@ export type AlarmLogger = Logger & {
 export interface AlarmLoggerConfig {
   useCloudWatch: boolean
   chain: string
+  structuredLog: boolean
 }

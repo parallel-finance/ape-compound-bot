@@ -30,7 +30,7 @@ export namespace Runtime {
             wallet: {
                 privateKey,
                 keystoreDir,
-                address,
+                keystoreName,
                 plainPassword,
                 base64Password,
             }
@@ -49,7 +49,9 @@ export namespace Runtime {
         if (privateKey) {
             wallet = Wallet.fromMnemonic(privateKey)
         } else {
-            const keystorePath = path.resolve(keystoreDir || DefaultKeystoreDir + KeystoreTypeDefault, address.toLowerCase());
+            if (!keystoreName) throw new Error("Please give a keystore filename in .env");
+
+            const keystorePath = path.resolve(keystoreDir || DefaultKeystoreDir + KeystoreTypeDefault, keystoreName.toLowerCase());
             if (!fs.existsSync(keystorePath)) throw new Error(`Keystore path is not found, ${keystorePath}`)
 
             let password = base64Password || plainPassword
@@ -57,7 +59,7 @@ export namespace Runtime {
 
             logger.info(`Unlocked keystore path: ${keystorePath}`)
             wallet = await keystore.InspectKeystoreWallet(
-                address,
+                keystoreName,
                 KeystoreTypeDefault,
                 password,
                 {
