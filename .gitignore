@@ -6,7 +6,8 @@
 
 .env
 .env.advance
-keystore
+keystore/default
+packages/keystore/keystore
 
 .nyc_output
 .DS_Store
