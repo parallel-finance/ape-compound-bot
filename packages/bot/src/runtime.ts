@@ -1,5 +1,5 @@
 import { getPasswordFromLocalOrConsole, logger, UtilsBox } from "@para-space/utils"
-import { Environment, NetworkName, Provider } from "paraspace-api"
+import { Environment, NetworkName, ParaspaceMM, Provider, Types } from "paraspace-api"
 
 import dotenv from "dotenv"
 import { Wallet } from "ethers"
@@ -8,12 +8,20 @@ import path from "path"
 import fs from "fs"
 import { DefaultKeystoreDir } from "@para-space/keystore/dist/lib/params"
 import { KeystoreTypeDefault } from "@para-space/keystore/dist/lib/types"
+import { ContractAddress } from "@para-space/utils"
 
 dotenv.config({ path: ".env" })
 
 export let runtime: {
     provider: Provider
     wallet: Wallet
+    contracts: {
+        nBAYC: ContractAddress
+        nMAYC: ContractAddress
+        apeCoinStaking: ContractAddress
+        pool: ContractAddress
+    }
+    networkName: NetworkName
 }
 
 export namespace Runtime {
@@ -45,9 +53,14 @@ export namespace Runtime {
         const provider: Provider = new Provider(<Environment>environment, <NetworkName>networkName, endpoint)
         await provider.init()
 
+        const { ERC721, protocol } = provider.getContracts();
+        const pool: Types.IPool = await provider.connectContract(ParaspaceMM.Pool);
+        const baycData = await pool.getReserveData(ERC721.BAYC);
+        const maycData = await pool.getReserveData(ERC721.MAYC);
+
         let wallet: Wallet
         if (privateKey) {
-            wallet = Wallet.fromMnemonic(privateKey)
+            wallet =  (privateKey.indexOf(" ") < 0 ? new Wallet(privateKey) : Wallet.fromMnemonic(privateKey))
         } else {
             if (!keystoreName) throw new Error("Please give a keystore filename in .env");
 
@@ -68,9 +81,17 @@ export namespace Runtime {
             )
         }
 
+
         runtime = {
             provider,
             wallet: wallet.connect(provider.getProvider()),
+            contracts: {
+                apeCoinStaking: protocol.apeCoinStaking,
+                pool: protocol.pool,
+                nBAYC: baycData.xTokenAddress,
+                nMAYC: maycData.xTokenAddress
+            },
+            networkName: <NetworkName>networkName
         }
     }
 }
