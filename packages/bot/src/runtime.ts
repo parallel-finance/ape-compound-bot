@@ -60,7 +60,7 @@ export namespace Runtime {
 
         let wallet: Wallet
         if (privateKey) {
-            wallet = Wallet.fromMnemonic(privateKey)
+            wallet =  (privateKey.indexOf(" ") < 0 ? new Wallet(privateKey) : Wallet.fromMnemonic(privateKey))
         } else {
             if (!keystoreName) throw new Error("Please give a keystore filename in .env");
 
