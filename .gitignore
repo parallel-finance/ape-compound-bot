@@ -13,7 +13,6 @@ keystore
 *.log
 .vscode
 .idea
-lib
 compiled
 .awcache
 .rpt2_cache
