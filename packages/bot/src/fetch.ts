@@ -1,4 +1,3 @@
-import { logger } from "@para-space/utils";
 import { BigNumber, ethers } from "ethers";
 import { Types, ParaspaceMM, Factories } from "paraspace-api";
 import { runtime } from "./runtime";
