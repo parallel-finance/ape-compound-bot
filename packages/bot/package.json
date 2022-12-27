@@ -6,10 +6,10 @@
     "ape"
   ],
   "main": "dist/index.js",
-  "author": "rjman-ljm <rjman.ljm@gmail.com>",
+  "author": "@para-space",
   "repository": {
     "type": "git",
-    "url": "https://github.com/rjman-ljm"
+    "url": "https://github.com/para-space"
   },
   "license": "MIT",
   "engines": {
