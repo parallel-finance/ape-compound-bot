@@ -1,4 +1,4 @@
-import { Maybe, Recordable } from "./types"
+import { Maybe } from "./types"
 
 export const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -10,10 +10,10 @@ export const isNumber = (val: string) => {
 }
 
 export const ObjectTransformer = <T, E>(
-  obj: Recordable<T>,
+  obj: Record<string, T>,
   transform: (x: T) => E
-): Recordable<E> => {
-  let newObj: Recordable<E> = {}
+): Record<string, E> => {
+  let newObj: Record<string, E> = {}
   Object.entries(obj).map(([k, v]: [string, T]) => {
     if (!isNumber(k)) newObj[k] = transform(v)
   })

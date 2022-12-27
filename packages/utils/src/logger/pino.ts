@@ -2,9 +2,8 @@ import pino from "pino"
 import { AlarmLogger, AlarmLoggerConfig, PagerdutyParams } from "./types"
 
 import * as dotenv from "dotenv"
-import axios from 'axios'
+import axios from "axios"
 import CloudWatch, { MetricData, PutMetricDataInput } from "aws-sdk/clients/cloudwatch"
-import { getBooleanEnv } from "../general"
 
 dotenv.config({ path: ".env" })
 
@@ -67,7 +66,7 @@ export const createAlarmLogger = (
   config: AlarmLoggerConfig = {
     useCloudWatch: false,
     chain: process.env.ETH_NETWORK_NAME || "unknown",
-    structuredLog: getBooleanEnv("STRUCTURED_LOG", false)
+    structuredLog: process.env.STRUCTURED_LOG?.toUpperCase() === "TRUE",
   }
 ): AlarmLogger => {
   if (config.useCloudWatch) CloudwatchClient.init()
