@@ -1,0 +1,143 @@
+name: Reusable deployment job
+
+on:
+  workflow_call:
+    inputs:
+      REACT_APP_TYPE:
+        required: true
+        type: string
+      APPLICATION_NAME:
+        default: 'ape-compound-bot'
+        type: string
+      AWS_REGION:
+        default: 'us-east-2'
+        type: string
+      DEPLOYMENT_ENV:
+        required: true
+        type: string
+      ECR_REPOSITORY:
+        required: true
+        type: string
+      ECS_CONTAINER_ENV_FILE_PATH:
+        required: true
+        type: string
+      ECS_CLUSTER:
+        required: true
+        type: string
+      SECURITY_GROUP_IDS_SSM:
+        required: true
+        type: string
+      SUBNET_IDS_SSM:
+        required: true
+        type: string
+      VPC_ID_SSM:
+        required: true
+        type: string
+    secrets:
+      ECS_EXECUTION_ROLE_ARN:
+        required: true
+      CERERTIFICATE_ARN:
+        required: true
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      CONTAINER_CONFIG_S3_BUCKET:
+        required: true
+      SLACK_WEBHOOK_URL:
+        required: true
+      OPENSEARCH_PASSWD:
+        required: true
+      OPENSEARCH_HOST:
+        required: true
+      PAGERDUTY_INTEGRATION_KEY:
+        required: true
+      PAT:
+        required: true
+
+env:
+  ECS_CONTAINER_ENV_FILE_S3_PATH: ${{ secrets.CONTAINER_CONFIG_S3_BUCKET }}/${{ inputs.APPLICATION_NAME }}/${{ github.sha }}-${{ inputs.DEPLOYMENT_ENV }}-container.env
+
+jobs:
+  deploy:
+    name: Deploy to ${{ inputs.DEPLOYMENT_ENV }}
+    runs-on: ubuntu-latest
+    concurrency: deployment-${{ inputs.DEPLOYMENT_ENV }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT }}
+          submodules: true
+
+      - name: Use node version 16.14.0
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16.14.0
+          registry-url: https://registry.npmjs.org
+
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ inputs.AWS_REGION }}
+
+      - name: Check and create ECS Cluster
+        uses: parallel-finance/internal-actions_deploy-ecs-cluster@v1
+        with:
+          cluster-name: ${{ inputs.ECS_CLUSTER }}
+
+      - name: Check and create ECR repository
+        uses: parallel-finance/internal-actions_create-ecr-repository@v1
+        with:
+          repository-name: ${{ inputs.ECR_REPOSITORY }}
+
+      - name: Copy ECS_CONTAINER_ENV_FILE to S3
+        run: |
+          aws s3 cp ${{ inputs.ECS_CONTAINER_ENV_FILE_PATH }} s3://${{ env.ECS_CONTAINER_ENV_FILE_S3_PATH }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.run_id }}.${{ github.run_attempt }}
+        run: |
+          docker build -t $ECR_REGISTRY/${{ inputs.ECR_REPOSITORY }}:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/${{ inputs.ECR_REPOSITORY }}:$IMAGE_TAG
+          echo "::set-output name=image::$ECR_REGISTRY/${{ inputs.ECR_REPOSITORY }}:$IMAGE_TAG"
+
+      - name: Deploy CloudFormation
+        uses: aws-actions/aws-cloudformation-github-deploy@v1
+        with:
+          name: ${{ inputs.APPLICATION_NAME }}-${{ inputs.DEPLOYMENT_ENV }}
+          template: aws/cloudformation-ecs-service-template.yml
+          no-fail-on-empty-changeset: "1"
+          parameter-overrides: >-
+            CertificateArn=${{ secrets.CERERTIFICATE_ARN }},
+            ExecutionRoleArn=${{ secrets.ECS_EXECUTION_ROLE_ARN }},
+            ECSClusterName=${{ inputs.ECS_CLUSTER }},
+            ApplicationName=${{ inputs.APPLICATION_NAME }},
+            EnvName=${{ inputs.DEPLOYMENT_ENV }},
+            Dimension=${{ inputs.REACT_APP_TYPE }},
+            SecurityGroupIDs=${{ inputs.SECURITY_GROUP_IDS_SSM }},
+            SubnetIDs=${{ inputs.SUBNET_IDS_SSM }},
+            VpcID=${{ inputs.VPC_ID_SSM }},
+            DockerImageUrl=${{ steps.build-image.outputs.image }},
+            EnvironmentFileUrl=arn:aws:s3:::${{ env.ECS_CONTAINER_ENV_FILE_S3_PATH }},
+            OpensearchPasswd=${{ secrets.OPENSEARCH_PASSWD }},
+            OpensearchHost=${{ secrets.OPENSEARCH_HOST }},
+            PagerDutyIntegrationKey=${{ secrets.PAGERDUTY_INTEGRATION_KEY }}
+
+      - name: slack
+        uses: 8398a7/action-slack@v3
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        with:
+          status: ${{ job.status }}
+          fields: repo,message,commit,author,eventName,ref,workflow
+        if: always()
