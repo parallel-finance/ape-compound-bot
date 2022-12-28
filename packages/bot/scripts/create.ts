@@ -1,9 +1,8 @@
-import { Wallet } from "ethers";
+import { logger, Wallet } from "ethers";
 import path from "path";
 import fs from "fs";
 import { getTextViaConsole } from "@para-space/utils";
-import { DefaultKeystoreDir } from "@para-space/keystore/dist/lib/params";
-import { KeystoreTypeDefault } from "@para-space/keystore/dist/lib/types";
+import { keystore } from "@para-space/keystore";
 
 async function main() {
     const mnemonic = await getTextViaConsole("Please enter your mnemonic: ", true)
@@ -11,13 +10,13 @@ async function main() {
     const wallet = Wallet.fromMnemonic(mnemonic)
     const jsonWallet = await wallet.encrypt(password);
 
-    const dir = path.resolve(DefaultKeystoreDir, KeystoreTypeDefault);
+    const dir = path.resolve(keystore.params.DefaultKeystoreDir, keystore.types.KeystoreTypeDefault);
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
     }
 
-    const keystorePath = path.resolve(DefaultKeystoreDir, KeystoreTypeDefault, wallet.address.toLowerCase());
-    console.log(`Key file is saved to ${keystorePath}`)
+    const keystorePath = path.resolve(keystore.params.DefaultKeystoreDir, keystore.types.KeystoreTypeDefault, wallet.address.toLowerCase());
+    logger.info(`Keystore file is saved to ${keystorePath}`)
     fs.writeFileSync(keystorePath, jsonWallet);
 }
 

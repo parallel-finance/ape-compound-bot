@@ -1,30 +1,8 @@
-import { logger } from "@para-space/utils";
 import { BigNumber, ethers } from "ethers";
 import { Types, ParaspaceMM, Factories } from "paraspace-api";
 import { runtime } from "./runtime";
 import { strategy } from "./strategy";
-
-export type StakedToken = {
-  pendingReward: BigNumber;
-  tokenId: string;
-};
-
-export type ValidTokens = {
-  validBayc: StakedToken[];
-  validMayc: StakedToken[];
-};
-
-type UserAndTokens = {
-  nftAsset: string;
-  users: string[];
-  tokenIds: string[][];
-  rawData: Map<string, StakedToken[]>;
-};
-
-export type ValidUserAndTokens = {
-  bayc: UserAndTokens;
-  mayc: UserAndTokens;
-};
+import { StakedToken, ValidCompoundInfo, ValidTokens } from "./types";
 
 const getValidStakedTokens = async (): Promise<ValidTokens> => {
   const apeCoinStaking: Types.ApeCoinStaking = await runtime.provider.connectContract(
@@ -40,7 +18,6 @@ const getValidStakedTokens = async (): Promise<ValidTokens> => {
       pendingReward: data.unclaimed,
       tokenId: data.tokenId.toString(),
     }));
-  logger.info(`fetch valid bayc id: ${validStakedBayc.length}`);
   const validStakedMayc: StakedToken[] = (
     await apeCoinStaking.getMaycStakes(runtime.contracts.nMAYC)
   )
@@ -51,14 +28,13 @@ const getValidStakedTokens = async (): Promise<ValidTokens> => {
       pendingReward: data.unclaimed,
       tokenId: data.tokenId.toString(),
     }));
-  logger.info(`fetch valid mayc id: ${validStakedMayc.length}`);
   return {
     validBayc: validStakedBayc,
     validMayc: validStakedMayc,
   };
 };
 
-const filterByUserLimit = async (validTokens: ValidTokens): Promise<ValidUserAndTokens> => {
+const filterByUserLimit = async (validTokens: ValidTokens): Promise<ValidCompoundInfo> => {
   const { ERC721 } = runtime.provider.getContracts();
   let baycOwnerToTokenIds: Map<string, StakedToken[]> = new Map();
   let maycOwnerToTokenIds: Map<string, StakedToken[]> = new Map();
@@ -144,7 +120,7 @@ const filterByUserLimit = async (validTokens: ValidTokens): Promise<ValidUserAnd
   };
 };
 
-export const fetchUserAndTokenIds = async (): Promise<ValidUserAndTokens> => {
+export const fetchCompoundInfo = async (): Promise<ValidCompoundInfo> => {
   const validStakedTokens = await getValidStakedTokens();
   return await filterByUserLimit(validStakedTokens);
 };

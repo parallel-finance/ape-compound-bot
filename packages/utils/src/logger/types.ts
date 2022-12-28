@@ -3,7 +3,7 @@ import pino from "pino"
 export type Logger = pino.Logger
 
 export enum Metrics {
-  Heartbeat = "heartbeat"
+  ApeCompoundBotHealth = "ApeCompoundBotHealth"
 }
 
 export interface PagerdutyParams {
