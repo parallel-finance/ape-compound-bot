@@ -21,7 +21,7 @@ jobs:
           npm install -g pnpm
           pnpm install
           pnpm lint
-  unit_tests:
+  Tests:
     name: Unit Tests
     runs-on: ubuntu-latest
 
