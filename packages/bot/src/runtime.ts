@@ -46,9 +46,10 @@ export namespace Runtime {
         let retryCount = 5
         while (true) {
             try {
+                logger.info(`start to run...`)
                 await worker()
                 heartBeat()
-                logger.debug(`don't worry, still alive... interval ${runtime.interval.scan / 60 / 1000} m`)
+                logger.info(`don't worry, still alive... interval ${runtime.interval.scan / 60 / 1000} m`)
             } catch (e) {
                 if (retryCount-- > 0) {
                     logger.error(`process error: ${mapErrMsg(e)}`)
