@@ -1,0 +1,37 @@
+name: Production Deployment
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  wait-for-approval:
+    runs-on: ubuntu-latest
+    environment: production-deployment
+    steps:
+      - run: echo "start production deployment"
+
+  call-deployment-in-local-repo:
+    needs: wait-for-approval
+    uses: ./.github/workflows/deploy.yml
+    with:
+      REACT_APP_TYPE: production
+      DEPLOYMENT_ENV: production
+      ECR_REPOSITORY: ape-compound-bot-prod
+      ECS_CONTAINER_ENV_FILE_PATH: ./aws/ecs-container-config/prod-container-env
+      ECS_CLUSTER: ape-compound-bot-prod
+      SECURITY_GROUP_IDS_SSM: /prod/public-api-security-groups
+      SUBNET_IDS_SSM: /prod/subnet-ids
+      VPC_ID_SSM: /prod/vpc-id
+    secrets:
+      ECS_EXECUTION_ROLE_ARN: ${{ secrets.ECS_EXECUTION_ROLE_ARN }}
+      CERERTIFICATE_ARN: ${{ secrets.PARALLEL_FI_CERERTIFICATE_ARN_US_EAST_2 }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.DEPLOYMENT_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.DEPLOYMENT_AWS_SECRET_ACCESS_KEY }}
+      CONTAINER_CONFIG_S3_BUCKET: ${{ secrets.CONTAINER_CONFIG_S3_BUCKET }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      OPENSEARCH_PASSWD: ${{ secrets.OPENSEARCH_PASSWD }}
+      OPENSEARCH_HOST: ${{ secrets.OPENSEARCH_HOST }}
+      PAGERDUTY_INTEGRATION_KEY: ${{ secrets.PROD_PAGERDUTY_INTEGRATION_KEY }}
+      PAT: ${{ secrets.PAT }}
