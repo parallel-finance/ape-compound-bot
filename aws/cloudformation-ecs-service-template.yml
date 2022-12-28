@@ -1,0 +1,138 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: The template used to create an ECS Service.
+Parameters:
+  CertificateArn:
+    Type: String
+  ExecutionRoleArn:
+    Type: String
+  ECSClusterName:
+    Type: String
+  ApplicationName:
+    Type: String
+  EnvName:
+    Type: String
+  Dimension:
+    Type: String
+  SecurityGroupIDs:
+    Type: AWS::SSM::Parameter::Value<List<AWS::EC2::SecurityGroup::Id>>
+  SubnetIDs:
+    Type: AWS::SSM::Parameter::Value<List<AWS::EC2::Subnet::Id>>
+  VpcID:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::VPC::Id>
+  DockerImageUrl:
+    Type: String
+  EnvironmentFileUrl:
+    Type: String
+    Description: The s3 url that contains the list of ecs container environment variables
+  OpensearchPasswd:
+    Type: String
+  OpensearchHost:
+    Type: String
+  TaskDesiredCount:
+    Type: Number
+    Default: 1
+  TaskCpuSetting:
+    Type: Number
+    Default: 2048
+  TaskMemorySetting:
+    Type: Number
+    Default: 4096
+  PagerDutyIntegrationKey:
+    Type: String
+    Default: ''
+
+Resources:
+  ECSService:
+    Type: 'AWS::ECS::Service'
+    Properties:
+      Cluster: !Ref ECSClusterName
+      CapacityProviderStrategy:
+        - CapacityProvider: FARGATE
+          Base: 0
+          Weight: 1
+      TaskDefinition: !Ref TaskDefinition
+      ServiceName: !Sub ${ApplicationName}-${EnvName}
+      DesiredCount: !Ref TaskDesiredCount
+      EnableExecuteCommand: true
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups: !Ref SecurityGroupIDs
+          Subnets: !Ref SubnetIDs
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      DeploymentController:
+        Type: ECS
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub ${ApplicationName}-${EnvName}
+      Cpu: !Ref TaskCpuSetting
+      Memory: !Ref TaskMemorySetting
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      ExecutionRoleArn: !Ref ExecutionRoleArn
+      TaskRoleArn: !Ref ExecutionRoleArn
+      ContainerDefinitions:
+        - Name: !Sub ${ApplicationName}-${EnvName}
+          Image: !Ref DockerImageUrl
+          EntryPoint:
+            - "/usr/local/bin/shush"
+            - "exec"
+            - "--"
+          Command:
+            - "pnpm"
+            - "start"
+          EnvironmentFiles:
+            - Type: s3
+              Value: !Ref EnvironmentFileUrl
+          PortMappings:
+            - ContainerPort: !Ref AppPort
+              HostPort: !Ref AppPort
+          LogConfiguration:
+            LogDriver: "awsfirelens"
+            Options:
+              AWS_Region: !Ref "AWS::Region"
+              HTTP_Passwd: !Ref OpensearchPasswd
+              HTTP_User: opensearch
+              Host: !Ref OpensearchHost
+              Index: !Sub ${ApplicationName}-${EnvName}
+              Name: es
+              Port: 443
+              Type: _doc
+              tls: On
+
+        - Name: log_router
+          Image: "906394416424.dkr.ecr.us-east-2.amazonaws.com/aws-for-fluent-bit:latest"
+          LogConfiguration:
+            LogDriver: "awslogs"
+            Options:
+              awslogs-create-group: true
+              awslogs-group: !Sub ${ApplicationName}-${EnvName}-firelens
+              awslogs-region: !Ref "AWS::Region"
+              awslogs-stream-prefix: firelens
+          FirelensConfiguration:
+            Type: fluentbit
+            Options:
+              config-file-type: file
+              config-file-value: /fluent-bit/configs/parse-json.conf
+
+
+  PagerDutyTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+        - Endpoint: !Sub "https://events.pagerduty.com/integration/${PagerDutyIntegrationKey}/enqueue"
+          Protocol: "HTTPS"
+
+
+
+Outputs:
+  ClusterName:
+    Description: The cluster used to create the service.
+    Value: !Ref ECSClusterName
+  ECSService:
+    Description: The created service.
+    Value: !Ref ECSService
