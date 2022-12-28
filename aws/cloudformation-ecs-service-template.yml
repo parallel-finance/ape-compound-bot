@@ -83,14 +83,11 @@ Resources:
             - "exec"
             - "--"
           Command:
-            - "pnpm"
-            - "start"
+            - "node"
+            - "/usr/local/bin/paraspace-ape-compound-bot"
           EnvironmentFiles:
             - Type: s3
               Value: !Ref EnvironmentFileUrl
-          PortMappings:
-            - ContainerPort: !Ref AppPort
-              HostPort: !Ref AppPort
           LogConfiguration:
             LogDriver: "awsfirelens"
             Options:
