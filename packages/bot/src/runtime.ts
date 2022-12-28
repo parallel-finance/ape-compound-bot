@@ -46,7 +46,7 @@ export namespace Runtime {
         let retryCount = 5
         while (true) {
             try {
-                logger.info(`start to run...`)
+                logger.info("start to run...")
                 await worker()
                 heartBeat()
                 logger.info(`don't worry, still alive... interval ${runtime.interval.scan / 60 / 1000} m`)

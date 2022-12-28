@@ -6,7 +6,7 @@ import { strategy } from "./strategy";
 import { StakedToken, ValidCompoundInfo, ValidTokens } from "./types";
 
 const getValidStakedTokens = async (): Promise<ValidTokens> => {
-  logger.debug(`Try get valid staked tokens...`)
+  logger.debug("Try get valid staked tokens...")
   const apeCoinStaking: Types.ApeCoinStaking = await runtime.provider.connectContract(
     ParaspaceMM.ApeCoinStaking
   );
