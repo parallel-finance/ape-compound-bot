@@ -7,8 +7,14 @@ on:
   workflow_dispatch:
 
 jobs:
+  wait-for-approval:
+    runs-on: ubuntu-latest
+    environment: staging-deployment
+    steps:
+      - run: echo "start staging deployment"
 
   call-deployment-in-local-repo:
+    needs: wait-for-approval
     uses: ./.github/workflows/deploy.yml
     with:
       REACT_APP_TYPE: staging
