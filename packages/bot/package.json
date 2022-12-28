@@ -16,7 +16,7 @@
     "node": ">= 14"
   },
   "scripts": {
-    "start": "ts-node src/index.ts",
+    "start": "node --unhandled-rejections=strict dist/index.js",
     "prebuild": "rimraf lib",
     "build": "tsc -p tsconfig.build.json",
     "build:docs": "typedoc --out docs src/ape-compound-bot.ts",
