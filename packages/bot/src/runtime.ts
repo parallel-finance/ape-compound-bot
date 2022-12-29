@@ -1,7 +1,7 @@
 import { Alert, getPasswordFromLocalOrConsole, logger, mapErrMsg, sleep, UtilsBox } from "@para-space/utils"
 import { Environment, NetworkName, ParaspaceMM, Provider, Types } from "paraspace-api"
 import dotenv from "dotenv"
-import { Wallet } from "ethers"
+import { ethers, Wallet } from "ethers"
 import path from "path"
 import fs from "fs"
 import { ContractAddress, types as LoggerTypes } from "@para-space/utils"
@@ -13,6 +13,9 @@ dotenv.config({ path: ".env" })
 export let runtime: {
     provider: Provider
     wallet: Wallet
+    state: {
+        balanceLow: boolean,
+    }
     contracts: {
         nBAYC: ContractAddress
         nMAYC: ContractAddress
@@ -47,6 +50,7 @@ export namespace Runtime {
         while (true) {
             try {
                 logger.info("start to run...")
+                await checkBalanceSufficient(runtime.wallet.address, ethers.utils.parseEther('0.2').toString())
                 await worker()
                 heartBeat()
                 logger.info(`don't worry, still alive... interval ${runtime.interval.scan / 60 / 1000} m`)
@@ -152,6 +156,9 @@ export namespace Runtime {
         runtime = {
             provider,
             wallet: wallet.connect(provider.getProvider()),
+            state: {
+                balanceLow: false,
+            },
             contracts: {
                 apeCoinStaking: protocol.apeCoinStaking,
                 pool: protocol.pool,
@@ -185,6 +192,26 @@ export namespace Runtime {
             metric: metric,
             value: 1
         })
+    }
+
+    async function checkBalanceSufficient(
+        address: string,
+        amount: string,
+    ): Promise<boolean> {
+        const balance = await runtime.provider.getProvider().getBalance(address)
+        const belowThanThreshold = balance.lt(amount)
+        const inBalanceLowStatus = runtime.state.balanceLow
+        if (belowThanThreshold && !inBalanceLowStatus) {
+            runtime.state.balanceLow = true
+            const warnMsg = `The balance of ${address} is low (${ethers.utils.formatEther(balance)}), please check it.`
+            logger.warn(warnMsg)
+            Alert.warn(warnMsg)
+        } else if (!belowThanThreshold && inBalanceLowStatus) {
+            runtime.state.balanceLow = false
+        } else {
+            // Do nothing
+        }
+        return !belowThanThreshold
     }
 
     export async function sendPagerduty(payload: LoggerTypes.PagerdutyParams) {

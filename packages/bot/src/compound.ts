@@ -93,16 +93,17 @@ const claimApeAndCompoundWithSimulation = async (
 }
 
 function compoundInfoToAlertMsgBody(info: CompoundInfo) {
-    const { nftAsset, users, tokenIds } = info
-    const validTokenIds = info.validStaked.filter((v) => tokenIds.flat().includes(v.tokenId))
+    const { nftAsset, users } = info
+    const tokenIds = info.tokenIds.flat()
+    const validTokenIds = info.validStaked.filter((v) => tokenIds.includes(v.tokenId))
     const totalPendingRewards = (validTokenIds.reduce((acc, cur) => acc.add(cur.pendingReward), BigNumber.from(0))).toString()
 
     return [
         { name: "signer", value: runtime.wallet.address },
         { name: "collection", value: nftAsset },
         { name: "totalPendingRewards", value: ethers.utils.formatEther(totalPendingRewards).toString() + " CAPE" },
-        { name: "users", value: `${users.length.toString()}-${users.join("\n")}` },
-        { name: "tokenIds", value: `${tokenIds.length.toString()} - ${tokenIds.join(",")}` },
+        { name: "users", value: `total: ${users.length.toString()}\n${users.join("\n")}` },
+        { name: "tokenIds", value: `total: ${tokenIds.length.toString()}\n${info.tokenIds.map(t => t.join(',')).join("\n")}` },
     ]
 }
 
