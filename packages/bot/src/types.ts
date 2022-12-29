@@ -3,6 +3,7 @@ import { BigNumber } from "ethers";
 export type StakedToken = {
     pendingReward: BigNumber;
     tokenId: string;
+    owner: string;
 };
 
 export type ValidTokens = {
@@ -14,7 +15,7 @@ export type CompoundInfo = {
     nftAsset: string;
     users: string[];
     tokenIds: string[][];
-    rawData: Map<string, StakedToken[]>;
+    validStaked: StakedToken[];
 };
 
 export type ValidCompoundInfo = {
