@@ -13,7 +13,7 @@ describe("split tokenIds should work correctly", () => {
                 ["10", "11"],
                 ["12", "13", "14", "15", "16", "17", "18", "19", "20", "21"],
             ],
-            rawData: new Map(),
+            validStaked: [],
         },
         mayc: {
             nftAsset: "MAYC",
@@ -23,7 +23,7 @@ describe("split tokenIds should work correctly", () => {
                 ["4", "5", "6"],
                 ["7", "8", "9", "10", "11"],
             ],
-            rawData: new Map(),
+            validStaked: [],
         }
     }
 
@@ -42,7 +42,7 @@ describe("split tokenIds should work correctly", () => {
                         ["1", "2", "3"],
                         ["4", "5", "6", "7", "8", "9"]
                     ],
-                    rawData: new Map()
+                    validStaked: [],
                 }
             )
             expect(res[1]).toStrictEqual(
@@ -53,7 +53,7 @@ describe("split tokenIds should work correctly", () => {
                         ["10", "11"],
                         ["12", "13", "14", "15", "16", "17", "18", "19"],
                     ],
-                    rawData: new Map()
+                    validStaked: [],
                 },
             )
             expect(res[2]).toStrictEqual(
@@ -63,7 +63,7 @@ describe("split tokenIds should work correctly", () => {
                     "tokenIds": [
                         ["20", "21"],
                     ],
-                    rawData: new Map()
+                    validStaked: [],
                 },
             )
             expect(res[3]).toStrictEqual(
@@ -75,7 +75,7 @@ describe("split tokenIds should work correctly", () => {
                         ["4", "5", "6"],
                         ["7", "8", "9"],
                     ],
-                    rawData: new Map()
+                    validStaked: [],
                 },
             )
             expect(res[4]).toStrictEqual(
@@ -85,7 +85,7 @@ describe("split tokenIds should work correctly", () => {
                     "tokenIds": [
                         ["10", "11"],
                     ],
-                    rawData: new Map()
+                    validStaked: [],
                 },
             )
         },
