@@ -28,8 +28,9 @@ export async function claimAndCompound(
             if (!!errMsg) { throw new Error(errMsg) }
 
             const receipt = await runtime.provider.getProvider().getTransactionReceipt(txHash)
+            const gasFee = parseFloat(ethers.utils.formatEther(receipt.effectiveGasPrice.mul(receipt.gasUsed)).toString()).toFixed(5)
             const etherscanLink = toEtherscanLink(txHash.toString(), runtime.networkName, runtime.isMainnet)
-            const infoMsg = `Do claimAndCompound succeed, tx ${etherscanLink}, gasUsed ${receipt.gasUsed.toString()}`;
+            const infoMsg = `Do claimAndCompound succeed, tx ${etherscanLink}, gasFee ${gasFee}`;
 
             logger.info(infoMsg)
             if (runtime.slack.enable) {
@@ -99,7 +100,7 @@ function compoundInfoToAlertMsgBody(info: CompoundInfo) {
     return [
         { name: "signer", value: runtime.wallet.address },
         { name: "collection", value: nftAsset },
-        { name: "totalPendingRewards", value: ethers.utils.formatEther(totalPendingRewards).toString() + " CAPE" },
+        { name: "totalPendingRewards", value: parseFloat(ethers.utils.formatEther(totalPendingRewards).toString()).toFixed(5) + " APE" },
         { name: "users", value: `total: ${users.length.toString()}\n${users.join("\n")}` },
         { name: "tokenIds", value: `total: ${tokenIds.length.toString()}\n${info.tokenIds.map(t => t.join(",")).join("\n")}` },
     ]
