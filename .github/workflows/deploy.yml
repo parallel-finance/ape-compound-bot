@@ -83,16 +83,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ inputs.AWS_REGION }}
 
-      - name: Check and create ECS Cluster
-        uses: parallel-finance/internal-actions_deploy-ecs-cluster@v1
-        with:
-          cluster-name: ${{ inputs.ECS_CLUSTER }}
-
-      - name: Check and create ECR repository
-        uses: parallel-finance/internal-actions_create-ecr-repository@v1
-        with:
-          repository-name: ${{ inputs.ECR_REPOSITORY }}
-
       - name: Copy ECS_CONTAINER_ENV_FILE to S3
         run: |
           aws s3 cp ${{ inputs.ECS_CONTAINER_ENV_FILE_PATH }} s3://${{ env.ECS_CONTAINER_ENV_FILE_S3_PATH }}
