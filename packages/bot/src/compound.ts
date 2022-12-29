@@ -8,7 +8,7 @@ import { cloneDeep } from "lodash"
 export async function claimAndCompound(
     compoundInfo: ValidCompoundInfo,
 ) {
-    const batches = splitCompoundInfos(compoundInfo, 3)
+    const batches = splitCompoundInfos(compoundInfo, 30)
     logger.info("Try to claimAndCompound, split into " + batches.length + " batches")
     for (const batch of batches) {
         if (!batch || batch.users.length === 0) continue
