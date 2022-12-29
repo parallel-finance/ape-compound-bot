@@ -1,5 +1,5 @@
 import { Alert, logger, mapErrMsg, toEtherscanLink } from "@para-space/utils";
-import { BigNumber } from "ethers";
+import { BigNumber, ethers } from "ethers";
 import { ParaspaceMM, Types } from "paraspace-api";
 import { Runtime, runtime } from "./runtime";
 import { CompoundInfo, ValidCompoundInfo } from "./types";
@@ -8,32 +8,31 @@ import { cloneDeep } from "lodash"
 export async function claimAndCompound(
     compoundInfo: ValidCompoundInfo,
 ) {
-    const batches = splitCompoundInfos(compoundInfo, 30)
+    const batches = splitCompoundInfos(compoundInfo, 3)
     logger.info("Try to claimAndCompound, split into " + batches.length + " batches")
     for (const batch of batches) {
+        if (!batch || batch.users.length === 0) continue
         const info: CompoundInfo = {
             nftAsset: batch.nftAsset,
             users: batch.users,
             tokenIds: batch.tokenIds,
-            rawData: batch.rawData,
+            validStaked: batch.validStaked,
         }
+        logger.info(`nftAsset: ${info.nftAsset}`)
+        logger.info(`users: ${info.users.length}: ${info.users}`)
+        logger.info(`tokenIds: ${info.tokenIds.flat().length}: ${info.tokenIds}`)
+        logger.info(`claimApeAndCompound..., signer address ${runtime.wallet.address}`)
+
         try {
-            const {
-                nftAsset,
-                users,
-                tokenIds,
-            } = info
-
-            logger.info(`nftAsset: ${nftAsset}`)
-            logger.info(`users: ${users.length}: ${users}`)
-            logger.info(`tokenIds: ${tokenIds.flat().length}: ${tokenIds}`)
-            logger.info(`claimApeAndCompound..., signer address ${runtime.wallet.address}`)
-
             const [txHash, errMsg] = await claimApeAndCompoundWithSimulation(info)
             if (!!errMsg) { throw new Error(errMsg) }
 
+            const receipt = await runtime.provider.getProvider().getTransactionReceipt(txHash)
+            const gasPrice = (await runtime.provider.getProvider().getGasPrice()) || "0"
+            const gasFee = BigNumber.from(gasPrice).mul(receipt.gasUsed).toString()
             const etherscanLink = toEtherscanLink(txHash.toString(), runtime.networkName, runtime.isMainnet)
-            const infoMsg = `Do claimAndCompound succeed, tx ${etherscanLink}`;
+            const infoMsg = `Do claimAndCompound succeed, tx ${etherscanLink}, gasFee ${gasFee}, gasUsed ${receipt.gasUsed.toString()}, gasPrice ${gasPrice.toString()}`;
+
             logger.info(infoMsg)
             if (runtime.slack.enable) {
                 Alert.info(infoMsg, [
@@ -50,8 +49,10 @@ export async function claimAndCompound(
 
 const claimApeAndCompoundWithSimulation = async (
     info: CompoundInfo,
-    callStatic?: boolean,
-    force: boolean = false
+    overrides?: {
+        disableCallStatic?: boolean,
+        force?: boolean,
+    }
 ): Promise<[string, string]> => {
     const pool: Types.IPool = runtime.provider.connectContract(ParaspaceMM.Pool, runtime.wallet)
     const {
@@ -59,17 +60,18 @@ const claimApeAndCompoundWithSimulation = async (
         users,
         tokenIds,
     } = info
-    if (callStatic) {
+    if (!overrides?.disableCallStatic) {
         try {
             await pool.callStatic.claimApeAndCompound(nftAsset, users, tokenIds)
             // No return and no error means the callStatic is successful
         } catch (e) {
             const errMsg = `callStatic claimApeAndCompound failed ${mapErrMsg(e)}`
             logger.error(`${errMsg}, params: ${JSON.stringify(info)}`)
+            return ["", errMsg]
         }
     }
     let options: any = {}
-    if (force) {
+    if (overrides?.force) {
         options = { gasLimit: "2000000" }
     } else {
         try {
@@ -91,20 +93,16 @@ const claimApeAndCompoundWithSimulation = async (
 }
 
 function compoundInfoToAlertMsgBody(info: CompoundInfo) {
-    const {
-        nftAsset,
-        users,
-        tokenIds,
-        rawData,
-    } = info
+    const { nftAsset, users, tokenIds } = info
+    const validTokenIds = info.validStaked.filter((v) => tokenIds.flat().includes(v.tokenId))
+    const totalPendingRewards = (validTokenIds.reduce((acc, cur) => acc.add(cur.pendingReward), BigNumber.from(0))).toString()
 
     return [
         { name: "signer", value: runtime.wallet.address },
         { name: "collection", value: nftAsset },
-        { name: "users", value: users.join(",") },
-        { name: "tokenIds", value: tokenIds.join(",") },
-        { name: "rawData", value: JSON.stringify(rawData) },
-        { name: "task", value: JSON.stringify(info) },
+        { name: "totalPendingRewards", value: ethers.utils.formatEther(totalPendingRewards).toString() + " CAPE" },
+        { name: "users", value: `${users.length.toString()}-${users.join("\n")}` },
+        { name: "tokenIds", value: `${tokenIds.length.toString()} - ${tokenIds.join(",")}` },
     ]
 }
 
@@ -120,6 +118,7 @@ export async function resolveErrMsg(info: CompoundInfo, e: any) {
             { name: "error", value: (e as any).toString() },
         ])
     }
+
     Runtime.sendPagerduty({
         payload: {
             summary: errMsg,
@@ -158,7 +157,7 @@ export function splitCompoundInfos(
             nftAsset: collectionInfo.nftAsset,
             users: [],
             tokenIds: [],
-            rawData: collectionInfo.rawData,
+            validStaked: collectionInfo.validStaked,
         }
         while (totalTokenIds > 0) {
             let userTokenIds: string[] = tokenIds[userIndex].slice(0, tokenIdLimit)
@@ -177,7 +176,7 @@ export function splitCompoundInfos(
                     nftAsset: collectionInfo.nftAsset,
                     users: [],
                     tokenIds: [],
-                    rawData: collectionInfo.rawData,
+                    validStaked: collectionInfo.validStaked,
                 }
                 tokenIdLimit = limit
             }

@@ -8,15 +8,15 @@ export const strategy: NetworkConfiguration<Recordable<string>> = {
         MAYC_TOKEN_PENDING_REWARD_LIMIT: "15",
     },
     goerli: {
-        BAYC_USER_PENDING_REWARD_LIMIT: "100",
-        BAYC_TOKEN_PENDING_REWARD_LIMIT: "50",
-        MAYC_USER_PENDING_REWARD_LIMIT: "100",
-        MAYC_TOKEN_PENDING_REWARD_LIMIT: "50",
-    },
-    fork_mainnet: {
         BAYC_USER_PENDING_REWARD_LIMIT: "10",
         BAYC_TOKEN_PENDING_REWARD_LIMIT: "5",
         MAYC_USER_PENDING_REWARD_LIMIT: "10",
         MAYC_TOKEN_PENDING_REWARD_LIMIT: "5",
+    },
+    fork_mainnet: {
+        BAYC_USER_PENDING_REWARD_LIMIT: "1",
+        BAYC_TOKEN_PENDING_REWARD_LIMIT: "0.5",
+        MAYC_USER_PENDING_REWARD_LIMIT: "1",
+        MAYC_TOKEN_PENDING_REWARD_LIMIT: "0.5",
     },
 };
