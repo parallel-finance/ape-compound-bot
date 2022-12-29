@@ -103,7 +103,7 @@ function compoundInfoToAlertMsgBody(info: CompoundInfo) {
         { name: "collection", value: nftAsset },
         { name: "totalPendingRewards", value: ethers.utils.formatEther(totalPendingRewards).toString() + " CAPE" },
         { name: "users", value: `total: ${users.length.toString()}\n${users.join("\n")}` },
-        { name: "tokenIds", value: `total: ${tokenIds.length.toString()}\n${info.tokenIds.map(t => t.join(',')).join("\n")}` },
+        { name: "tokenIds", value: `total: ${tokenIds.length.toString()}\n${info.tokenIds.map(t => t.join(",")).join("\n")}` },
     ]
 }
 

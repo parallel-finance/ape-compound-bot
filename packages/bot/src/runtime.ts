@@ -50,7 +50,7 @@ export namespace Runtime {
         while (true) {
             try {
                 logger.info("start to run...")
-                await checkBalanceSufficient(runtime.wallet.address, ethers.utils.parseEther('0.2').toString())
+                await checkBalanceSufficient(runtime.wallet.address, ethers.utils.parseEther("0.2").toString())
                 await worker()
                 heartBeat()
                 logger.info(`don't worry, still alive... interval ${runtime.interval.scan / 60 / 1000} m`)
