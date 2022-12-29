@@ -28,10 +28,8 @@ export async function claimAndCompound(
             if (!!errMsg) { throw new Error(errMsg) }
 
             const receipt = await runtime.provider.getProvider().getTransactionReceipt(txHash)
-            const gasPrice = (await runtime.provider.getProvider().getGasPrice()) || "0"
-            const gasFee = BigNumber.from(gasPrice).mul(receipt.gasUsed).toString()
             const etherscanLink = toEtherscanLink(txHash.toString(), runtime.networkName, runtime.isMainnet)
-            const infoMsg = `Do claimAndCompound succeed, tx ${etherscanLink}, gasFee ${gasFee}, gasUsed ${receipt.gasUsed.toString()}, gasPrice ${gasPrice.toString()}`;
+            const infoMsg = `Do claimAndCompound succeed, tx ${etherscanLink}, gasUsed ${receipt.gasUsed.toString()}`;
 
             logger.info(infoMsg)
             if (runtime.slack.enable) {
