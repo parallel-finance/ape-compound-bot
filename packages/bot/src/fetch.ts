@@ -72,7 +72,7 @@ const filterByUserLimit = async (validTokens: ValidTokens): Promise<ValidCompoun
   let ownerToTokenIds: Map<string, StakedToken[]>[] = [new Map(), new Map()];
   const limits = [
     strategy[runtime.networkName].BAYC_USER_PENDING_REWARD_LIMIT,
-    strategy[runtime.networkName].BAYC_USER_PENDING_REWARD_LIMIT
+    strategy[runtime.networkName].MAYC_USER_PENDING_REWARD_LIMIT
   ]
 
   Array.from([
