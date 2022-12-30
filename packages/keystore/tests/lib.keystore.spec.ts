@@ -6,6 +6,9 @@ import path from "path";
 import { randomFillSync } from "crypto";
 import * as util from "util";
 
+const SECONDS = 1000;
+jest.setTimeout(70 * SECONDS)
+
 let mockAddress = "";
 const mockMnemonic = "";
 const mockPassphraseBase64 = "MTIzNDU2";
