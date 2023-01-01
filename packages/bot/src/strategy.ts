@@ -3,9 +3,9 @@ import { NetworkConfiguration, Recordable } from "@para-space/utils";
 export const strategy: NetworkConfiguration<Recordable<string>> = {
     mainnet: {
         BAYC_USER_PENDING_REWARD_LIMIT: "200",
-        BAYC_TOKEN_PENDING_REWARD_LIMIT: "60",
+        BAYC_TOKEN_PENDING_REWARD_LIMIT: "120",
         MAYC_USER_PENDING_REWARD_LIMIT: "75",
-        MAYC_TOKEN_PENDING_REWARD_LIMIT: "20",
+        MAYC_TOKEN_PENDING_REWARD_LIMIT: "25",
     },
     goerli: {
         BAYC_USER_PENDING_REWARD_LIMIT: "100",
