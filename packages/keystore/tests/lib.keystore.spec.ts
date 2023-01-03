@@ -6,9 +6,6 @@ import path from "path";
 import { randomFillSync } from "crypto";
 import * as util from "util";
 
-const SECONDS = 1000;
-jest.setTimeout(70 * SECONDS)
-
 let mockAddress = "";
 const mockMnemonic = "";
 const mockPassphraseBase64 = "MTIzNDU2";
@@ -41,7 +38,7 @@ beforeAll(async () => {
 	fs.copyFileSync(keyPath1, keyPath2);
 
 	mockAddress = wallet.address.toLowerCase();
-}, 5000)
+}, 50000)
 
 test("InspectKeystorePK", async () => {
 	const pk = await keystore.InspectKeystorePK(mockAddress.toLowerCase(), keystore.types.KeystoreTypeMiner, mockPassphraseBase64);
