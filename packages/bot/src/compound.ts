@@ -4,6 +4,7 @@ import { ParaspaceMM, Types } from "paraspace-api";
 import { Runtime, runtime } from "./runtime";
 import { CompoundInfo, ValidCompoundInfo } from "./types";
 import { cloneDeep } from "lodash"
+import { GLOBAL_OVERRIDES } from "./constant";
 
 export async function claimAndCompound(
     compoundInfo: ValidCompoundInfo,
@@ -84,6 +85,10 @@ const claimApeAndCompoundWithSimulation = async (
             console.log(`estimateGas Params: ${JSON.stringify(info)}`)
             return ["", errMsg]
         }
+    }
+    options = {
+        ...options,
+        ...GLOBAL_OVERRIDES
     }
     const tx = await pool.claimApeAndCompound(nftAsset, users, tokenIds, options)
     logger.debug(`claimApeAndCompound tx hash: ${tx.hash}, wait for tx to be mined...`)
