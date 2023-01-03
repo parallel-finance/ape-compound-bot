@@ -36,6 +36,7 @@ The bot is configured via environment variables. You can find the list of enviro
 
 <details>
 <summary>The .env file contains the following variables you need to configure:</summary>
+
 - `ETH_ENDPOINT=<your-RPC-endpoint>`: The RPC endpoint of the Ethereum network you want to connect to. You can use [Infura](https://infura.io/) or [Alchemy](https://www.alchemy.com/) to get a free RPC endpoint.
 
 - wallet connection: the bot will use the wallet to sign transactions directly.
