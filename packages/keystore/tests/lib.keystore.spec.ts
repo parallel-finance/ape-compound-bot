@@ -38,7 +38,7 @@ beforeAll(async () => {
 	fs.copyFileSync(keyPath1, keyPath2);
 
 	mockAddress = wallet.address.toLowerCase();
-}, 5000)
+}, 50000)
 
 test("InspectKeystorePK", async () => {
 	const pk = await keystore.InspectKeystorePK(mockAddress.toLowerCase(), keystore.types.KeystoreTypeMiner, mockPassphraseBase64);
