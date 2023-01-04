@@ -5,3 +5,10 @@ export const GLOBAL_OVERRIDES: Overrides = {
   maxPriorityFeePerGas: ethers.utils.parseUnits("1.5", "gwei"),
   type: 2,
 };
+
+export const APE_STAKING_POOL_ID = {
+  APE: "0",
+  BAYC: "1",
+  MAYC: "2",
+  BAKC: "3",
+};

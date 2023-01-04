@@ -19,6 +19,8 @@ export let runtime: {
     contracts: {
         nBAYC: ContractAddress
         nMAYC: ContractAddress
+        nBAKC: ContractAddress
+        BAKC: ContractAddress
         apeCoinStaking: ContractAddress
         pool: ContractAddress
     }
@@ -121,6 +123,7 @@ export namespace Runtime {
         const pool: Types.IPool = await provider.connectContract(ParaspaceMM.Pool);
         const baycData = await pool.getReserveData(ERC721.BAYC);
         const maycData = await pool.getReserveData(ERC721.MAYC);
+        const bakcData = await pool.getReserveData(protocol.BAKC);
 
         let wallet: Wallet
         if (privateKey) {
@@ -163,7 +166,9 @@ export namespace Runtime {
                 apeCoinStaking: protocol.apeCoinStaking,
                 pool: protocol.pool,
                 nBAYC: baycData.xTokenAddress,
-                nMAYC: maycData.xTokenAddress
+                nMAYC: maycData.xTokenAddress,
+                nBAKC: bakcData.xTokenAddress,
+                BAKC: protocol.BAKC
             },
             networkName: <NetworkName>networkName,
             isMainnet: [NetworkName.fork_mainnet, NetworkName.mainnet].includes(<NetworkName>networkName),
