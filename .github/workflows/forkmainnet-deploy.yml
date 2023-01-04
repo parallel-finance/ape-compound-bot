@@ -17,8 +17,8 @@ jobs:
     needs: wait-for-approval
     uses: ./.github/workflows/deploy.yml
     with:
-      DEPLOYMENT_ENV: forkMainnet
-      REACT_APP_TYPE: forkMainnet
+      DEPLOYMENT_ENV: forkmainnet
+      REACT_APP_TYPE: forkmainnet
       ECR_REPOSITORY: ape-compound-bot-forkmainnet
       ECS_CONTAINER_ENV_FILE_PATH: ./aws/ecs-container-config/forkmainnet-container-env
       ECS_CLUSTER: ape-compound-bot-forkmainnet
