@@ -1,4 +1,5 @@
 import { mapErrMsg, sameAddress } from "@para-space/utils";
+import { notEmpty } from "@para-space/utils";
 import { logger } from "@para-space/utils";
 import { BigNumber, ethers } from "ethers";
 import { chunk } from "lodash";
@@ -111,23 +112,27 @@ const getValidStakedTokens = async (): Promise<ValidTokens> => {
         contract,
         validStakes.map((data) => data.pair.mainTokenId)
       );
-      return validStakes
-        .map((data, i) => ({
-          ...data,
-          pair: {
-            ...data.pair,
-            mainTokenOwner: mainTokenOwners[i],
-          },
-        }))
-        .filter(validateBAKCOwnerAndApproved);
+      return await Promise.all(validStakes
+        .map(async (data, i) => {
+          const stakeBakc: StakedToken = {
+            ...data,
+            pair: {
+              ...data.pair,
+              mainTokenOwner: mainTokenOwners[i],
+            },
+          }
+          if (await validateBAKCOwnerAndApproved(stakeBakc)) {
+            return stakeBakc
+          }
+        }) as unknown as StakedToken[]);
     })
   );
 
   return {
     validBayc: validTokens[0],
     validMayc: validTokens[1],
-    validBakcForBayc: validBakcTokens[0],
-    validBakcForMayc: validBakcTokens[1],
+    validBakcForBayc: validBakcTokens[0].filter(notEmpty),
+    validBakcForMayc: validBakcTokens[1].filter(notEmpty),
   };
 };
 

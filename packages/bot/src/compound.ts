@@ -19,8 +19,7 @@ export async function claimAndCompound(compoundInfo: ValidCompoundInfo) {
             isBakc: batch.isBakc,
             nftPairs: batch.nftPairs,
         };
-        logger.info(`isBakc: ${info.isBakc}`);
-        logger.info(`nftAsset: ${info.nftAsset}`);
+        logger.info(`nftAsset: for BAKC: ${info.isBakc}: ${info.nftAsset}`);
         logger.info(`users: ${info.users.length}: ${info.users}`);
         logger.info(
             `tokenIds: ${info.isBakc ? info.nftPairs.flat().length : info.tokenIds.flat().length}: ${info.isBakc ? info.nftPairs.flat().map(data => data.bakcTokenId) : info.tokenIds
@@ -82,7 +81,7 @@ const claimApeAndCompoundWithSimulation = async (
     }
     let options: any = {};
     if (overrides?.force) {
-        options = { gasLimit: "10000000" }
+        options = { gasLimit: "10000000" };
     } else {
         try {
             const estimateGas: BigNumber = info.isBakc
