@@ -23,7 +23,7 @@ export async function claimAndCompound(compoundInfo: ValidCompoundInfo) {
         logger.info(`nftAsset: ${info.nftAsset}`);
         logger.info(`users: ${info.users.length}: ${info.users}`);
         logger.info(
-            `tokenIds: ${info.isBakc ? info.nftPairs.flat().length : info.tokenIds.flat().length}: ${info.isBakc ? info.nftPairs : info.tokenIds
+            `tokenIds: ${info.isBakc ? info.nftPairs.flat().length : info.tokenIds.flat().length}: ${info.isBakc ? info.nftPairs.flat().map(data => data.bakcTokenId) : info.tokenIds
             }`
         );
         logger.info(`claimApeAndCompound..., signer address ${runtime.wallet.address}`);
