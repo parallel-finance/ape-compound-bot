@@ -3,7 +3,6 @@ import { logger } from "@para-space/utils";
 import { BigNumber, ethers } from "ethers";
 import { chunk } from "lodash";
 import { Types, ParaspaceMM, Factories } from "paraspace-api";
-import { contracts } from "paraspace-api/dist/config/typechain";
 import { APE_STAKING_POOL_ID } from "./constant";
 import { runtime } from "./runtime";
 import { strategy } from "./strategy";
@@ -24,45 +23,6 @@ const requestBatchNFTOwnerInfo = async (contract: string, tokenIds: string[]) =>
     throw new Error(errMsg);
   }
 };
-
-// const requestBatchNFTOwnerInfo = async (
-//   contract: string,
-//   raw: Pick<StakedToken, keyof StakedToken>[]
-// ): Promise<typeof raw & { owner: string }[]> => {
-//   if (!raw || raw.length === 0) return [];
-//   try {
-//     const nToken = runtime.provider.connectMultiAbi(Factories.IERC721__factory, contract);
-//     const calls = raw.map(({ poolId, tokenId, pair }) => {
-//       if (poolId === APE_STAKING_POOL_ID.BAYC || poolId === APE_STAKING_POOL_ID.MAYC) {
-//         return nToken.ownerOf(tokenId);
-//       }
-//       if (poolId === APE_STAKING_POOL_ID.BAKC) {
-//         return nToken.ownerOf(pair.mainTokenId);
-//       }
-//     });
-//     const nftOwners = (
-//       await Promise.all(
-//         chunk(calls, 2000).map((batch) => runtime.provider.getMulticallProvider().all(batch))
-//       )
-//     ).flat();
-
-//     // Append owner info to raw data
-//     return raw.map((data, i) => {
-//       return data.poolId === APE_STAKING_POOL_ID.BAKC
-//         ? {
-//             ...data,
-//             pair: {
-//               ...data.pair,
-//               mainTokenOwner: nftOwners[i],
-//             },
-//           }
-//         : { ...data, owner: nftOwners[i] };
-//     });
-//   } catch (e) {
-//     const errMsg = `requestBatchNFTOwnerInfo error: ${mapErrMsg(e)}`;
-//     throw new Error(errMsg);
-//   }
-// };
 
 const validateBAKCOwnerAndApproved = async (stakeBakc: StakedToken): Promise<boolean> => {
   const nBakc = runtime.provider.connectFactory(
@@ -102,8 +62,8 @@ const getValidStakedTokens = async (): Promise<ValidTokens> => {
       const stakes = await getStakeMethod(contract);
       const validStakes: StakedToken[] = stakes
         .filter((data) => {
-          data.poolId.toString() === APE_STAKING_POOL_ID.BAYC ||
-          data.poolId.toString() === APE_STAKING_POOL_ID.MAYC
+          return data.poolId.toString() === APE_STAKING_POOL_ID.BAYC ||
+            data.poolId.toString() === APE_STAKING_POOL_ID.MAYC
             ? data.unclaimed.gt(ethers.utils.parseEther(limits[i]))
             : false;
         })
@@ -149,7 +109,7 @@ const getValidStakedTokens = async (): Promise<ValidTokens> => {
         }));
       const mainTokenOwners = await requestBatchNFTOwnerInfo(
         contract,
-        validStakes.map((data) => data.tokenId)
+        validStakes.map((data) => data.pair.mainTokenId)
       );
       return validStakes
         .map((data, i) => ({

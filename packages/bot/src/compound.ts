@@ -2,7 +2,7 @@ import { Alert, logger, mapErrMsg, toEtherscanLink } from "@para-space/utils";
 import { BigNumber, ethers } from "ethers";
 import { ParaspaceMM, Types } from "paraspace-api";
 import { Runtime, runtime } from "./runtime";
-import { CompoundInfo, ValidCompoundInfo } from "./types";
+import { CompoundInfo, PairNft, ValidCompoundInfo } from "./types";
 import { cloneDeep } from "lodash";
 import { GLOBAL_OVERRIDES } from "./constant";
 
@@ -181,29 +181,32 @@ export function splitCompoundInfos(compoundInfo: ValidCompoundInfo, limit: numbe
         let nftPairs = cloneDeep(collectionInfo.nftPairs);
 
         let totalAmount = collectionInfo.isBakc
-            ? nftPairs.reduce((acc, cur) => acc + cur.length, 0)
-            : tokenIds.reduce((acc, cur) => acc + cur.length, 0);
+            ? nftPairs.flat().length
+            : tokenIds.flat().length
+
+        let batch: CompoundInfo = {
+            nftAsset: collectionInfo.nftAsset,
+            users: [],
+            tokenIds: [],
+            validStaked: collectionInfo.validStaked,
+            isBakc: collectionInfo.isBakc,
+            nftPairs: [],
+        };
 
         while (totalAmount > 0) {
-            let batch: CompoundInfo = {
-                nftAsset: collectionInfo.nftAsset,
-                users: [],
-                tokenIds: [],
-                validStaked: collectionInfo.validStaked,
-                isBakc: collectionInfo.isBakc,
-                nftPairs: [],
-            };
             let subAmount = 0;
-
-            tokenIds[userIndex] = tokenIds[userIndex].slice(tokenIdLimit);
-
             batch.users.push(users[userIndex]);
+
             if (collectionInfo.isBakc) {
-                batch.nftPairs.push(nftPairs[userIndex].slice(0, tokenIdLimit));
-                subAmount = nftPairs[userIndex].slice(0, tokenIdLimit).length;
+                let userPairs: PairNft[] = nftPairs[userIndex].slice(0, tokenIdLimit)
+                nftPairs[userIndex] = nftPairs[userIndex].slice(tokenIdLimit);
+                batch.nftPairs.push(userPairs);
+                subAmount = userPairs.length;
             } else {
-                batch.tokenIds.push(tokenIds[userIndex].slice(0, tokenIdLimit));
-                subAmount = tokenIds[userIndex].slice(0, tokenIdLimit).length;
+                let userTokenIds: string[] = tokenIds[userIndex].slice(0, tokenIdLimit)
+                tokenIds[userIndex] = tokenIds[userIndex].slice(tokenIdLimit);
+                batch.tokenIds.push(userTokenIds);
+                subAmount = userTokenIds.length;
             }
 
             tokenIdLimit -= subAmount;
@@ -215,6 +218,14 @@ export function splitCompoundInfos(compoundInfo: ValidCompoundInfo, limit: numbe
                 userIndex++;
             if (tokenIdLimit === 0 || totalAmount === 0) {
                 batches.push(batch);
+                batch = {
+                    nftAsset: collectionInfo.nftAsset,
+                    users: [],
+                    tokenIds: [],
+                    validStaked: collectionInfo.validStaked,
+                    isBakc: collectionInfo.isBakc,
+                    nftPairs: [],
+                };
                 tokenIdLimit = limit;
             }
         }
