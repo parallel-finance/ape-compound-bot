@@ -2,7 +2,9 @@ import inquirer from "inquirer"
 import * as fs from "fs-extra"
 import { logger } from "../logger"
 
-export async function getPasswordFromLocalOrConsole(path: string = "/tmp/para-space-ape-compound-bot-seed") {
+export async function getPasswordFromLocalOrConsole(
+  path: string = "/tmp/para-space-ape-compound-bot-seed"
+) {
   let privateKey: string
   try {
     privateKey = fs.readFileSync(path).toString()

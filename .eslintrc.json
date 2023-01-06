@@ -1,30 +1,28 @@
 {
-    "env": {
-        "es2021": true,
-        "node": true,
-        "jest": true
-    },
-    "extends": [
-        // "standard",
-        "prettier"
-    ],
-    "parser": "@typescript-eslint/parser",
-    "parserOptions": {
-        "ecmaVersion": 13
-    },
-    "plugins": [
-        "@typescript-eslint"
-    ],
-    "globals": {
-        "NodeJS": true
-    },
-    "rules": {
-        // "import/order": ["warn", { "newlines-between": "always" }],
-        "quotes": "error",
-        "no-unused-vars": "off",
-        "no-useless-constructor": "off",
-        "@typescript-eslint/no-unused-vars": ["error", {
-            "argsIgnorePattern": "^_"
-        }]
-    }
+  "env": {
+    "es2021": true,
+    "node": true,
+    "jest": true
+  },
+  "extends": [
+    "plugin:prettier/recommended"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 13
+  },
+  "plugins": [
+    "@typescript-eslint"
+  ],
+  "globals": {
+    "NodeJS": true
+  },
+  "rules": {
+    "quotes": "error",
+    "no-unused-vars": "off",
+    "no-useless-constructor": "off",
+    "@typescript-eslint/no-unused-vars": ["error", {
+      "argsIgnorePattern": "^_"
+    }]
+  }
 }

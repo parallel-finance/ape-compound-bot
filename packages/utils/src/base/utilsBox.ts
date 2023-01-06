@@ -22,7 +22,9 @@ export namespace UtilsBox {
       const globalConfig: GlobalConfig = getGlobalConfig()
 
       utilsBox.config = globalConfig
-      logger.info(`Utils are initialized for ${globalConfig.net.environment} ${globalConfig.net.networkName}`)
+      logger.info(
+        `Utils are initialized for ${globalConfig.net.environment} ${globalConfig.net.networkName}`
+      )
     } catch (e) {
       logger.error(`UtilsBox init error: ${e}`)
     }
