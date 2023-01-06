@@ -72,7 +72,7 @@ const claimApeAndCompoundWithSimulation = async (
     }
     let options: any = {}
     if (overrides?.force) {
-        options = { gasLimit: "2000000" }
+        options = { gasLimit: "10000000" }
     } else {
         try {
             const estimateGas: BigNumber = await pool.estimateGas.claimApeAndCompound(nftAsset, users, tokenIds)
@@ -92,7 +92,7 @@ const claimApeAndCompoundWithSimulation = async (
     }
     const tx = await pool.claimApeAndCompound(nftAsset, users, tokenIds, options)
     logger.debug(`claimApeAndCompound tx hash: ${tx.hash}, wait for tx to be mined...`)
-    await tx.wait()
+    await tx.wait(2)
     return [tx.hash, ""]
 }
 
