@@ -5,15 +5,15 @@ import { Runtime } from "./runtime"
 import { ValidCompoundInfo } from "./types"
 
 async function main() {
-  logger.info("Starting paraspace-ape-compound-bot")
+    logger.info("Starting paraspace-ape-compound-bot")
 
-  const worker = async () => {
-    const compoundInfo: ValidCompoundInfo = await fetchCompoundInfo()
-    await claimAndCompound(compoundInfo)
-  }
-  await Runtime.run(worker)
+    const worker = async () => {
+        const compoundInfo: ValidCompoundInfo = await fetchCompoundInfo()
+        await claimAndCompound(compoundInfo)
+    }
+    await Runtime.run(worker)
 
-  logger.info("Stopping paraspace-ape-compound-bot")
+    logger.info("Stopping paraspace-ape-compound-bot")
 }
 
 main().then(() => process.exit(0))
