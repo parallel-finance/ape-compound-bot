@@ -19,13 +19,14 @@ export async function claimAndCompound(compoundInfo: ValidCompoundInfo) {
             isBakc: batch.isBakc,
             nftPairs: batch.nftPairs,
         };
-        logger.info(`nftAsset: for BAKC: ${info.isBakc}: ${info.nftAsset}`);
+        const method = info.isBakc ? "claimPairedApeAndCompound" : "claimApeAndCompound"
+        logger.info(`nftAsset: ${info.nftAsset}, for BAKC: ${info.isBakc}`);
         logger.info(`users: ${info.users.length}: ${info.users}`);
         logger.info(
             `tokenIds: ${info.isBakc ? info.nftPairs.flat().length : info.tokenIds.flat().length}: ${info.isBakc ? info.nftPairs.flat().map(data => data.bakcTokenId) : info.tokenIds
             }`
         );
-        logger.info(`claimApeAndCompound..., signer address ${runtime.wallet.address}`);
+        logger.info(`${method}..., signer address ${runtime.wallet.address}`);
 
         try {
             const [txHash, errMsg] = await claimApeAndCompoundWithSimulation(info);
@@ -67,6 +68,7 @@ const claimApeAndCompoundWithSimulation = async (
 ): Promise<[string, string]> => {
     const pool: Types.IPool = runtime.provider.connectContract(ParaspaceMM.Pool, runtime.wallet);
     const { nftAsset, users, tokenIds, nftPairs } = info;
+    const method = info.isBakc ? "claimPairedApeAndCompound" : "claimApeAndCompound"
     if (!overrides?.disableCallStatic) {
         try {
             info.isBakc
@@ -74,7 +76,7 @@ const claimApeAndCompoundWithSimulation = async (
                 : await pool.callStatic.claimApeAndCompound(nftAsset, users, tokenIds);
             // No return and no error means the callStatic is successful
         } catch (e) {
-            const errMsg = `callStatic claimApeAndCompound failed ${mapErrMsg(e)}`;
+            const errMsg = `callStatic ${method} failed ${mapErrMsg(e)}`;
             logger.error(`${errMsg}, params: ${JSON.stringify(info)}`);
             return ["", errMsg];
         }
@@ -87,12 +89,12 @@ const claimApeAndCompoundWithSimulation = async (
             const estimateGas: BigNumber = info.isBakc
                 ? await pool.estimateGas.claimPairedApeAndCompound(nftAsset, users, nftPairs)
                 : await pool.estimateGas.claimApeAndCompound(nftAsset, users, tokenIds);
-            logger.info(`estimateGas claimApeAndCompound ${estimateGas.toString()}`);
+            logger.info(`estimateGas ${method} ${estimateGas.toString()}`);
             options = {
                 gasLimit: estimateGas.add("100000"),
             };
         } catch (e) {
-            const errMsg = `estimateGas claimApeAndCompound failed ${mapErrMsg(e)}`;
+            const errMsg = `estimateGas ${method} failed ${mapErrMsg(e)}`;
             console.log(`estimateGas Params: ${JSON.stringify(info)}`);
             return ["", errMsg];
         }
@@ -102,7 +104,7 @@ const claimApeAndCompoundWithSimulation = async (
         ...GLOBAL_OVERRIDES,
     };
     const tx = info.isBakc ? await pool.claimPairedApeAndCompound(nftAsset, users, nftPairs, options) : await pool.claimApeAndCompound(nftAsset, users, tokenIds, options);
-    logger.debug(`claimApeAndCompound tx hash: ${tx.hash}, wait for tx to be mined...`);
+    logger.debug(`${method} tx hash: ${tx.hash}, wait for tx to be mined...`);
     await tx.wait(5);
     return [tx.hash, ""];
 };
