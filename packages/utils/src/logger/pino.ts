@@ -66,7 +66,7 @@ export const createAlarmLogger = (
   config: AlarmLoggerConfig = {
     useCloudWatch: false,
     chain: process.env.ETH_NETWORK_NAME || "unknown",
-    structuredLog: process.env.STRUCTURED_LOG?.toUpperCase() === "TRUE",
+    structuredLog: process.env.STRUCTURED_LOG?.toUpperCase() === "TRUE"
   }
 ): AlarmLogger => {
   if (config.useCloudWatch) CloudwatchClient.init()

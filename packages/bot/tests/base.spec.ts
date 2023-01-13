@@ -1,8 +1,5 @@
 describe("base", () => {
-    it(
-        "tests should work",
-        () => {
-            expect(true).toBe(true);
-        },
-    );
+    it("tests should work", () => {
+        expect(true).toBe(true)
+    })
 })
