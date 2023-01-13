@@ -14,6 +14,7 @@ import fs from "fs"
 import { ContractAddress, types as LoggerTypes } from "@para-space/utils"
 import { utilsBox } from "@para-space/utils"
 import { keystore } from "@para-space/keystore"
+import { getBooleanEnv } from "@para-space/utils"
 
 dotenv.config({ path: ".env" })
 
@@ -24,12 +25,15 @@ export let runtime: {
         balanceLow: boolean
     }
     contracts: {
-        nBAYC: ContractAddress
-        nMAYC: ContractAddress
-        nBAKC: ContractAddress
         BAKC: ContractAddress
         apeCoinStaking: ContractAddress
         pool: ContractAddress
+        nBAYC: ContractAddress
+        nMAYC: ContractAddress
+        nBAKC: ContractAddress
+    }
+    config: {
+        compoundBakc: boolean
     }
     isMainnet: boolean
     networkName: NetworkName
@@ -121,12 +125,15 @@ export namespace Runtime {
         )
         await provider.init()
 
+        // get paraspace protocol data
         const { ERC721, protocol } = provider.getContracts()
         const pool: Types.IPool = await provider.connectContract(ParaspaceMM.Pool)
         const baycData = await pool.getReserveData(ERC721.BAYC)
         const maycData = await pool.getReserveData(ERC721.MAYC)
-        const bakcData = await pool.getReserveData(protocol.BAKC)
 
+        const compoundBakc = getBooleanEnv("COMPOUND_BAKC")
+
+        // get wallet data
         let wallet: Wallet
         if (privateKey) {
             wallet =
@@ -158,6 +165,7 @@ export namespace Runtime {
             )
         }
 
+        // get monitor config
         const useSlack = !!slackWebhook
         const useCloudWatch = !!cloudWatchNameSpace
         const usePagerduty = !!pagerdutyWebhook
@@ -173,12 +181,15 @@ export namespace Runtime {
                 balanceLow: false
             },
             contracts: {
+                BAKC: protocol.BAKC,
                 apeCoinStaking: protocol.apeCoinStaking,
                 pool: protocol.pool,
                 nBAYC: baycData.xTokenAddress,
                 nMAYC: maycData.xTokenAddress,
-                nBAKC: bakcData.xTokenAddress,
-                BAKC: protocol.BAKC
+                nBAKC: compoundBakc ? (await pool.getReserveData(protocol.BAKC)).xTokenAddress : ""
+            },
+            config: {
+                compoundBakc
             },
             networkName: <NetworkName>networkName,
             isMainnet: [NetworkName.fork_mainnet, NetworkName.mainnet].includes(

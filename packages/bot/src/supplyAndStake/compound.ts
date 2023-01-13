@@ -1,10 +1,10 @@
 import { Alert, logger, mapErrMsg, toEtherscanLink } from "@para-space/utils"
 import { BigNumber, ethers } from "ethers"
 import { ParaspaceMM, Types } from "paraspace-api"
-import { Runtime, runtime } from "./runtime"
-import { CompoundInfo, PairNft, ValidCompoundInfo } from "./types"
+import { Runtime, runtime } from "../runtime"
+import { CompoundInfo, PairNft, ValidCompoundInfo } from "../types"
 import { cloneDeep } from "lodash"
-import { GLOBAL_OVERRIDES } from "./constant"
+import { GLOBAL_OVERRIDES } from "../constant"
 
 export async function claimAndCompound(compoundInfo: ValidCompoundInfo) {
     const batches = splitCompoundInfos(compoundInfo, 30)

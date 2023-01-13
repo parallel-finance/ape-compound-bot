@@ -1,6 +1,6 @@
 import { logger } from "@para-space/utils"
-import { claimAndCompound } from "./compound"
-import { fetchCompoundInfo } from "./fetch"
+import { claimAndCompound } from "./supplyAndStake/compound"
+import { fetchCompoundInfo } from "./supplyAndStake/fetch"
 import { Runtime } from "./runtime"
 import { ValidCompoundInfo } from "./types"
 

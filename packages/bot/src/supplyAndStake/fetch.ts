@@ -1,13 +1,12 @@
 import { mapErrMsg, sameAddress } from "@para-space/utils"
-import { notEmpty } from "@para-space/utils"
 import { logger } from "@para-space/utils"
 import { BigNumber, ethers } from "ethers"
 import { chunk } from "lodash"
 import { Types, ParaspaceMM, Factories } from "paraspace-api"
-import { APE_STAKING_POOL_ID } from "./constant"
-import { runtime } from "./runtime"
-import { strategy } from "./strategy"
-import { StakedToken, ValidCompoundInfo, ValidTokens } from "./types"
+import { APE_STAKING_POOL_ID } from "../constant"
+import { runtime } from "../runtime"
+import { strategy } from "../strategy"
+import { StakedToken, ValidCompoundInfo, ValidTokens } from "../types"
 
 const requestBatchNFTOwnerInfo = async (contract: string, tokenIds: string[]) => {
     if (!tokenIds || tokenIds.length === 0) return []
@@ -44,30 +43,32 @@ const validateBAKCOwnerAndApproved = async (stakeBakc: StakedToken): Promise<boo
     )
 }
 
-const getValidStakedTokens = async (): Promise<ValidTokens> => {
-    logger.debug("Try get valid staked tokens...")
+const getValidBaycAndMaycStakedTokens = async (): Promise<{
+    validBayc: StakedToken[]
+    validMayc: StakedToken[]
+}> => {
+    logger.debug("Try get valid BAYC and MAYC staked tokens...")
+
     const apeCoinStaking: Types.ApeCoinStaking = await runtime.provider.connectContract(
         ParaspaceMM.ApeCoinStaking
     )
-
     const contracts = [runtime.contracts.nBAYC, runtime.contracts.nMAYC]
-    const getStakeMethod = apeCoinStaking.getAllStakes
     const limits = [
         strategy[runtime.networkName].BAYC_TOKEN_PENDING_REWARD_LIMIT,
         strategy[runtime.networkName].MAYC_TOKEN_PENDING_REWARD_LIMIT
     ]
-    const bakcLimits = strategy[runtime.networkName].BAKC_TOKEN_PENDING_REWARD_LIMIT
 
     const validTokens = await Promise.all(
         contracts.map(async (contract, i) => {
-            const stakes = await getStakeMethod(contract)
+            const stakes = await apeCoinStaking.getAllStakes(contract)
             const validStakes: StakedToken[] = stakes
-                .filter(data => {
-                    return data.poolId.toString() === APE_STAKING_POOL_ID.BAYC ||
-                        data.poolId.toString() === APE_STAKING_POOL_ID.MAYC
+                .filter(data =>
+                    [APE_STAKING_POOL_ID.BAYC, APE_STAKING_POOL_ID.MAYC].includes(
+                        data.poolId.toString()
+                    )
                         ? data.unclaimed.gt(ethers.utils.parseEther(limits[i]))
                         : false
-                })
+                )
                 .map(data => ({
                     pendingReward: data.unclaimed,
                     tokenId: data.tokenId.toString(),
@@ -87,16 +88,33 @@ const getValidStakedTokens = async (): Promise<ValidTokens> => {
             return validStakes.map((data, i) => ({ ...data, owner: nftOwners[i] }))
         })
     )
+    return {
+        validBayc: validTokens[0],
+        validMayc: validTokens[1]
+    }
+}
 
-    const validBakcTokens = await Promise.all(
+const getValidBakcStakedTokens = async (): Promise<{
+    validBakcForBayc: StakedToken[]
+    validBakcForMayc: StakedToken[]
+}> => {
+    logger.debug("Try get valid BAKC staked tokens...")
+    const apeCoinStaking: Types.ApeCoinStaking = await runtime.provider.connectContract(
+        ParaspaceMM.ApeCoinStaking
+    )
+
+    const contracts = [runtime.contracts.nBAYC, runtime.contracts.nMAYC]
+    const bakcLimits = strategy[runtime.networkName].BAKC_TOKEN_PENDING_REWARD_LIMIT
+
+    const fetchedBakcTokens = await Promise.all(
         contracts.map(async contract => {
-            const stakes = await getStakeMethod(contract)
-            const validStakes: StakedToken[] = stakes
-                .filter(data => {
-                    return data.poolId.toString() === APE_STAKING_POOL_ID.BAKC
+            const stakes = await apeCoinStaking.getAllStakes(contract)
+            const fetchedStakes: StakedToken[] = stakes
+                .filter(data =>
+                    data.poolId.toString() === APE_STAKING_POOL_ID.BAKC
                         ? data.unclaimed.gt(ethers.utils.parseEther(bakcLimits))
                         : false
-                })
+                )
                 .map(data => ({
                     pendingReward: data.unclaimed,
                     tokenId: data.tokenId.toString(),
@@ -110,30 +128,42 @@ const getValidStakedTokens = async (): Promise<ValidTokens> => {
                 }))
             const mainTokenOwners = await requestBatchNFTOwnerInfo(
                 contract,
-                validStakes.map(data => data.pair.mainTokenId)
+                fetchedStakes.map(data => data.pair.mainTokenId)
             )
-            return await Promise.all(
-                validStakes.map(async (data, i) => {
-                    const stakeBakc: StakedToken = {
-                        ...data,
-                        pair: {
-                            ...data.pair,
-                            mainTokenOwner: mainTokenOwners[i]
-                        }
-                    }
-                    if (await validateBAKCOwnerAndApproved(stakeBakc)) {
-                        return stakeBakc
-                    }
-                }) as unknown as StakedToken[]
-            )
+            return fetchedStakes.map((data, i) => ({
+                ...data,
+                pair: {
+                    ...data.pair,
+                    mainTokenOwner: mainTokenOwners[i]
+                }
+            }))
         })
     )
 
+    const bakcStatus = await Promise.all(
+        fetchedBakcTokens.map(
+            async data =>
+                await Promise.all(
+                    data.map(async token => await validateBAKCOwnerAndApproved(token))
+                )
+        )
+    )
+
     return {
-        validBayc: validTokens[0],
-        validMayc: validTokens[1],
-        validBakcForBayc: validBakcTokens[0].filter(notEmpty),
-        validBakcForMayc: validBakcTokens[1].filter(notEmpty)
+        validBakcForBayc: fetchedBakcTokens[0].filter((_, index) => bakcStatus[0][index]),
+        validBakcForMayc: fetchedBakcTokens[1].filter((_, index) => bakcStatus[1][index])
+    }
+}
+
+const getValidStakedTokens = async (): Promise<ValidTokens> => {
+    const mainTokens = await getValidBaycAndMaycStakedTokens()
+    const bakcTokens = runtime.config.compoundBakc ? await getValidBakcStakedTokens() : undefined
+
+    return {
+        validBayc: mainTokens.validBayc.slice(0, 0),
+        validMayc: mainTokens.validMayc.slice(0, 0),
+        validBakcForBayc: bakcTokens?.validBakcForBayc.slice(0, 1) || [],
+        validBakcForMayc: bakcTokens?.validBakcForMayc.slice(0, 1) || []
     }
 }
 

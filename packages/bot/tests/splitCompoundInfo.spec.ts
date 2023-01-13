@@ -1,5 +1,5 @@
 import { ValidCompoundInfo } from "../src/types"
-import { splitCompoundInfos } from "../src/compound"
+import { splitCompoundInfos } from "../src/supplyAndStake/compound"
 
 describe("split tokenIds should work correctly", () => {
     const compoundInfo: ValidCompoundInfo = {
