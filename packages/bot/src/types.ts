@@ -1,4 +1,10 @@
+import { NetworkConfiguration } from "@para-space/utils"
 import { BigNumber } from "ethers"
+
+export type paraspaceConfigurations = {
+    requestedBlockRangeLimit: number
+    p2pPairStartBlock: NetworkConfiguration<number>
+}
 
 export type StakedToken = {
     pendingReward: BigNumber
@@ -38,4 +44,13 @@ export type ValidCompoundInfo = {
     mayc: CompoundInfo
     bakcForBayc: CompoundInfo
     bakcForMayc: CompoundInfo
+}
+
+export type SimpleMatchOrder = {
+    orderHash: string
+    stakingType: number
+    apeToken: string
+    apeTokenId: number
+    bakcTokenId: number
+    pendingReward: BigNumber
 }

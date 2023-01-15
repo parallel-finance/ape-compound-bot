@@ -1,8 +1,10 @@
+import { Runtime } from "./runtime"
 import { logger } from "@para-space/utils"
 import { claimAndCompound } from "./supplyAndStake/compound"
 import { fetchCompoundInfo } from "./supplyAndStake/fetch"
-import { Runtime } from "./runtime"
-import { ValidCompoundInfo } from "./types"
+import { fetchP2PCompoundInfo } from "./p2p/fetch"
+import { claimAndCompoundForP2PPairStaking } from "./p2p/compound"
+import { SimpleMatchOrder, ValidCompoundInfo } from "./types"
 
 async function main() {
     logger.info("Starting paraspace-ape-compound-bot")
@@ -10,6 +12,8 @@ async function main() {
     const worker = async () => {
         const compoundInfo: ValidCompoundInfo = await fetchCompoundInfo()
         await claimAndCompound(compoundInfo)
+        const p2pCompoundInfo: SimpleMatchOrder[] = await fetchP2PCompoundInfo()
+        await claimAndCompoundForP2PPairStaking(p2pCompoundInfo)
     }
     await Runtime.run(worker)
 

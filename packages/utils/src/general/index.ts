@@ -9,6 +9,7 @@ export * from "./getEnv"
 export * from "./common"
 export * from "./types"
 export * from "./bignumber"
+export * from "./request"
 
 export default {
   GetEnv,
