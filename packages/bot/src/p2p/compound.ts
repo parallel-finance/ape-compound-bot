@@ -5,10 +5,7 @@ import { Alert, logger, mapErrMsg, toEtherscanLink } from "@para-space/utils"
 import { BigNumber, ethers } from "ethers"
 import { GLOBAL_OVERRIDES } from "../constant"
 
-export const splitOrders = async (
-    orders: SimpleMatchOrder[],
-    limit: number
-): Promise<SimpleMatchOrder[][]> => {
+export const splitOrders = (orders: SimpleMatchOrder[], limit: number): SimpleMatchOrder[][] => {
     let orderAmount = orders.length
     let batchOrders: SimpleMatchOrder[][] = []
     while (orderAmount > 0) {
@@ -20,7 +17,7 @@ export const splitOrders = async (
 }
 
 export const claimAndCompoundForP2PPairStaking = async (orders: SimpleMatchOrder[]) => {
-    const batches = await splitOrders(orders, 10)
+    const batches = splitOrders(orders, 10)
     for (const batch of batches) {
         if (!batch || batch.length === 0) continue
         logger.info(
