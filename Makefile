@@ -20,3 +20,7 @@ build: init
 .PHONY: run
 run: init
 	pnpm -w run start
+
+.PHONY: test
+test: init
+	pnpm -w test

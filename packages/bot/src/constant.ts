@@ -1,4 +1,3 @@
-import { NetworkConfiguration } from "@para-space/utils"
 import { ethers, Overrides } from "ethers"
 
 export const GLOBAL_OVERRIDES: Overrides = {
@@ -25,7 +24,7 @@ export const paraspaceConfigurations = {
     requestedBlockRangeLimit: 1500,
     p2pPairStartBlock: {
         mainnet: 16411893,
-        goerli: 8314131,
+        goerli: 8308407,
         fork_mainnet: 16411893
     }
 }

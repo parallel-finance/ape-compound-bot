@@ -8,9 +8,8 @@ import { BigNumber, ethers } from "ethers"
 import { strategy } from "../strategy"
 
 const fetchValidMatchOrders = async (): Promise<string[]> => {
-    const p2pPairStaking: Types.P2PPairStaking = await runtime.provider.connectFactory(
-        Factories.P2PPairStaking__factory,
-        "0x6e73Bf357fF6d3853e65B973A6fa217f26f45208"
+    const p2pPairStaking: Types.P2PPairStaking = await runtime.provider.connectContract(
+        ParaspaceMM.P2PPairStaking
     )
     const startBlock = paraspaceConfigurations.p2pPairStartBlock[runtime.networkName]
     const endBlock = await runtime.provider.getProvider().getBlockNumber()
@@ -31,7 +30,7 @@ const fetchValidMatchOrders = async (): Promise<string[]> => {
     const batchSize = 5
     let matchedOrders: string[] = []
     let canceledOrders: string[] = []
-    let brokednOrders: string[] = []
+    let brokenOrders: string[] = []
     for (let i = 0; i < ranges.length; i += batchSize) {
         const batch = ranges.slice(i, i + batchSize)
         const matchedEvents = await collectAndFlat(
@@ -51,13 +50,13 @@ const fetchValidMatchOrders = async (): Promise<string[]> => {
         const brokenEvents = await collectAndFlat(
             batch.map(range => p2pPairStaking.queryFilter(orderBrokenFilter, ...range))
         )
-        brokednOrders.push(
+        brokenOrders.push(
             ...brokenEvents.map((data: { args: { orderHash: string } }) => data.args.orderHash)
         )
     }
 
     const validOrders = matchedOrders.filter(
-        hash => !canceledOrders.includes(hash) && !brokednOrders.includes(hash)
+        hash => !canceledOrders.includes(hash) && !brokenOrders.includes(hash)
     )
     return validOrders
 }
@@ -65,7 +64,7 @@ const fetchValidMatchOrders = async (): Promise<string[]> => {
 const requestMatchedOrderInfo = async (orderHashes: string[]): Promise<SimpleMatchOrder[]> => {
     const p2pPairStaking = runtime.provider.connectMultiAbi(
         Factories.P2PPairStaking__factory,
-        "0x6e73Bf357fF6d3853e65B973A6fa217f26f45208"
+        runtime.provider.getContracts().protocol.P2PPairStaking
     )
     try {
         const calls = orderHashes.map(hash => p2pPairStaking.matchedOrders(hash))
@@ -90,9 +89,8 @@ const requestMatchedOrderInfo = async (orderHashes: string[]): Promise<SimpleMat
 }
 
 const filterByRewardLimit = async (orders: SimpleMatchOrder[]): Promise<SimpleMatchOrder[]> => {
-    const p2pPairStaking: Types.P2PPairStaking = await runtime.provider.connectFactory(
-        Factories.P2PPairStaking__factory,
-        "0x6e73Bf357fF6d3853e65B973A6fa217f26f45208"
+    const p2pPairStaking: Types.P2PPairStaking = await runtime.provider.connectContract(
+        ParaspaceMM.P2PPairStaking
     )
     const apeCoinStaking: Types.ApeCoinStaking = await runtime.provider.connectContract(
         ParaspaceMM.ApeCoinStaking
