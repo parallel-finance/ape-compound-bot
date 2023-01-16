@@ -160,10 +160,10 @@ const getValidStakedTokens = async (): Promise<ValidTokens> => {
     const bakcTokens = runtime.config.compoundBakc ? await getValidBakcStakedTokens() : undefined
 
     return {
-        validBayc: mainTokens.validBayc.slice(0, 0),
-        validMayc: mainTokens.validMayc.slice(0, 0),
-        validBakcForBayc: bakcTokens?.validBakcForBayc.slice(0, 1) || [],
-        validBakcForMayc: bakcTokens?.validBakcForMayc.slice(0, 1) || []
+        validBayc: mainTokens.validBayc,
+        validMayc: mainTokens.validMayc,
+        validBakcForBayc: bakcTokens?.validBakcForBayc || [],
+        validBakcForMayc: bakcTokens?.validBakcForMayc || []
     }
 }
 
