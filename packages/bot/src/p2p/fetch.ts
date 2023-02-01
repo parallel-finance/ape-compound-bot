@@ -24,12 +24,10 @@ const fetchValidMatchOrders = async (): Promise<string[]> => {
         )
     }
     const orderMatchedFilter = p2pPairStaking.filters.PairStakingMatched()
-    const orderCanceledFilter = p2pPairStaking.filters.OrderCancelled()
     const orderBrokenFilter = p2pPairStaking.filters.PairStakingBreakUp()
 
     const batchSize = 5
     let matchedOrders: string[] = []
-    let canceledOrders: string[] = []
     let brokenOrders: string[] = []
     for (let i = 0; i < ranges.length; i += batchSize) {
         const batch = ranges.slice(i, i + batchSize)
@@ -40,13 +38,6 @@ const fetchValidMatchOrders = async (): Promise<string[]> => {
             ...matchedEvents.map((data: { args: { orderHash: string } }) => data.args.orderHash)
         )
 
-        const canceledEvents = await collectAndFlat(
-            batch.map(range => p2pPairStaking.queryFilter(orderCanceledFilter, ...range))
-        )
-        canceledOrders.push(
-            ...canceledEvents.map((data: { args: { orderHash: string } }) => data.args.orderHash)
-        )
-
         const brokenEvents = await collectAndFlat(
             batch.map(range => p2pPairStaking.queryFilter(orderBrokenFilter, ...range))
         )
@@ -55,9 +46,7 @@ const fetchValidMatchOrders = async (): Promise<string[]> => {
         )
     }
 
-    const validOrders = matchedOrders.filter(
-        hash => !canceledOrders.includes(hash) && !brokenOrders.includes(hash)
-    )
+    const validOrders = matchedOrders.filter(hash => !brokenOrders.includes(hash))
     return validOrders
 }
 
