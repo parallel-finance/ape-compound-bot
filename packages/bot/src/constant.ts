@@ -13,11 +13,11 @@ export const APE_STAKING_POOL_ID = {
     BAKC: "3"
 }
 
-export const StakingType = {
-    BAYCStaking: 0,
-    MAYCStaking: 1,
-    BAYCPairStaking: 2,
-    MAYCPairStaking: 3
+export enum StakingType {
+    BAYCStaking = 0,
+    MAYCStaking = 1,
+    BAYCPairStaking = 2,
+    MAYCPairStaking = 3
 }
 
 export const paraspaceConfigurations = {

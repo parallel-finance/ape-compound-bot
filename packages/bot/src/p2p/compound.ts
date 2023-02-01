@@ -3,7 +3,7 @@ import { Runtime, runtime } from "../runtime"
 import { SimpleMatchOrder } from "../types"
 import { Alert, logger, mapErrMsg, toEtherscanLink } from "@para-space/utils"
 import { BigNumber, ethers } from "ethers"
-import { GLOBAL_OVERRIDES } from "../constant"
+import { GLOBAL_OVERRIDES, StakingType } from "../constant"
 
 export const splitOrders = (orders: SimpleMatchOrder[], limit: number): SimpleMatchOrder[][] => {
     let orderAmount = orders.length
@@ -18,11 +18,22 @@ export const splitOrders = (orders: SimpleMatchOrder[], limit: number): SimpleMa
 
 export const claimAndCompoundForP2PPairStaking = async (orders: SimpleMatchOrder[]) => {
     const batches = splitOrders(orders, 10)
+    logger.info(
+        `Try to claimForMatchedOrderAndCompound for ${orders.length} orders in ${batches.length} txs`
+    )
     for (const batch of batches) {
         if (!batch || batch.length === 0) continue
-        logger.info(
-            `Try to claimForMatchedOrderAndCompound for ${orders.length} orders in ${batches.length} txs`
-        )
+        const tokenMsgs = batch
+            .map(order =>
+                order.stakingType <= StakingType.MAYCStaking
+                    ? `${StakingType[order.stakingType]}-${order.apeTokenId}`
+                    : `${StakingType[order.stakingType]}-${order.apeTokenId}-${
+                          order.bakcTokenId
+                      }(BAKC)`
+            )
+            .join(",")
+        logger.info(tokenMsgs)
+
         try {
             const [txHash, errMsg] = await claimForMatchedOrderAndCompoundWithSimulation(batch)
             if (!!errMsg) {
@@ -38,7 +49,7 @@ export const claimAndCompoundForP2PPairStaking = async (orders: SimpleMatchOrder
                 runtime.networkName,
                 runtime.isMainnet
             )
-            const infoMsg = `Do claimForMatchedOrderAndCompound succeed, tx ${etherscanLink}, gasFee ${gasFee}`
+            const infoMsg = `Do P2P claimForMatchedOrderAndCompound succeed, tx ${etherscanLink}, gasFee ${gasFee}`
 
             logger.info(infoMsg)
             if (runtime.slack.enable) {
@@ -58,7 +69,7 @@ const resolveErrMsg = async (orders: SimpleMatchOrder[], e: any) => {
     const { wallet, networkName } = runtime
     const orderHashes = orders.map(data => data.orderHash)
 
-    const errMsg = `Do claimForMatchedOrderAndCompound error: ${mapErrMsg(e)}`
+    const errMsg = `Do P2P claimForMatchedOrderAndCompound error: ${mapErrMsg(e)}`
     logger.error(errMsg)
     if (runtime.slack.enable) {
         Alert.error(errMsg, [
@@ -85,10 +96,18 @@ const resolveErrMsg = async (orders: SimpleMatchOrder[], e: any) => {
 }
 
 const generateAlertMsgBody = (orders: SimpleMatchOrder[]) => {
-    const orderHashes = orders.map(data => data.orderHash)
     const totalPendingRewards = orders
         .reduce((acc, cur) => acc.add(cur.pendingReward), BigNumber.from(0))
         .toString()
+    const tokenMsg = orders
+        .map(order =>
+            order.stakingType <= StakingType.MAYCStaking
+                ? `${order.orderHash}-${StakingType[order.stakingType]}-${order.apeTokenId}`
+                : `${order.orderHash}-${StakingType[order.stakingType]}-${order.apeTokenId}-${
+                      order.bakcTokenId
+                  }(BAKC)`
+        )
+        .join("\n")
     return [
         { name: "signer", value: runtime.wallet.address },
         {
@@ -99,7 +118,7 @@ const generateAlertMsgBody = (orders: SimpleMatchOrder[]) => {
         },
         {
             name: "matchedOrders",
-            value: `total: ${orders.length.toString()}\n${orderHashes.join("\n")}`
+            value: `total: ${orders.length.toString()}\n${tokenMsg}`
         }
     ]
 }
