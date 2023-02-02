@@ -112,7 +112,7 @@ const filterByRewardLimit = async (orders: SimpleMatchOrder[]): Promise<SimpleMa
             const stakeInfo = stakes.find(
                 data =>
                     data.poolId.toString() === APE_STAKING_POOL_ID.BAKC &&
-                    data.tokenId.toNumber() === order.apeTokenId
+                    data.tokenId.toNumber() === order.bakcTokenId
             )
             order.pendingReward = stakeInfo?.unclaimed || BigNumber.from(0)
             return stakeInfo?.unclaimed.gt(bakcLimit) || false
