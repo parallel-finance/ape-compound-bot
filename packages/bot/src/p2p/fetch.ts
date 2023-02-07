@@ -6,6 +6,7 @@ import { SimpleMatchOrder } from "../types"
 import { chunk } from "lodash"
 import { BigNumber, ethers } from "ethers"
 import { strategy } from "../strategy"
+import _ from "lodash"
 
 const fetchValidMatchOrders = async (): Promise<string[]> => {
     const p2pPairStaking: Types.P2PPairStaking = await runtime.provider.connectContract(
@@ -46,8 +47,18 @@ const fetchValidMatchOrders = async (): Promise<string[]> => {
         )
     }
 
-    const validOrders = matchedOrders.filter(hash => !brokenOrders.includes(hash))
-    return validOrders
+    const matchedOrdersClone = _.cloneDeep(matchedOrders)
+
+    matchedOrdersClone.forEach(hash => {
+        const bindex = brokenOrders.indexOf(hash)
+        const mindex = matchedOrders.indexOf(hash)
+        if (bindex > -1) {
+            brokenOrders.splice(bindex, 1)
+            matchedOrders.splice(mindex, 1)
+        }
+    })
+
+    return matchedOrders
 }
 
 const requestMatchedOrderInfo = async (orderHashes: string[]): Promise<SimpleMatchOrder[]> => {
