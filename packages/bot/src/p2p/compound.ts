@@ -27,9 +27,7 @@ export const claimAndCompoundForP2PPairStaking = async (orders: SimpleMatchOrder
             .map(order =>
                 order.stakingType <= StakingType.MAYCStaking
                     ? `${StakingType[order.stakingType]}-${order.apeTokenId}`
-                    : `${StakingType[order.stakingType]}-${order.apeTokenId}-${
-                          order.bakcTokenId
-                      }(BAKC)`
+                    : `${StakingType[order.stakingType]}-${order.bakcTokenId}`
             )
             .join(",")
         logger.info(tokenMsgs)
@@ -103,9 +101,7 @@ const generateAlertMsgBody = (orders: SimpleMatchOrder[]) => {
         .map(order =>
             order.stakingType <= StakingType.MAYCStaking
                 ? `${order.orderHash}-${StakingType[order.stakingType]}-${order.apeTokenId}`
-                : `${order.orderHash}-${StakingType[order.stakingType]}-${order.apeTokenId}-${
-                      order.bakcTokenId
-                  }(BAKC)`
+                : `${order.orderHash}-${StakingType[order.stakingType]}-${order.bakcTokenId}`
         )
         .join("\n")
     return [

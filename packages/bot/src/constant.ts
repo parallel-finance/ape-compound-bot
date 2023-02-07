@@ -16,8 +16,7 @@ export const APE_STAKING_POOL_ID = {
 export enum StakingType {
     BAYCStaking = 0,
     MAYCStaking = 1,
-    BAYCPairStaking = 2,
-    MAYCPairStaking = 3
+    BAKCPairStaking = 2
 }
 
 export const paraspaceConfigurations = {
