@@ -1,4 +1,4 @@
-import { Alert, logger, mapErrMsg, toEtherscanLink } from "@para-space/utils";
+import { Alert, logger, mapErrMsg, toEtherscanLink, getOptMaxFeePerGas } from "@para-space/utils";
 import { BigNumber, ethers } from "ethers";
 import { ParaspaceMM, Types } from "paraspace-api";
 import { Runtime, runtime } from "./runtime";
@@ -88,7 +88,8 @@ const claimApeAndCompoundWithSimulation = async (
     }
     options = {
         ...options,
-        ...GLOBAL_OVERRIDES
+        ...GLOBAL_OVERRIDES,
+        maxFeePerGas: await getOptMaxFeePerGas()
     }
     const tx = await pool.claimApeAndCompound(nftAsset, users, tokenIds, options)
     logger.debug(`claimApeAndCompound tx hash: ${tx.hash}, wait for tx to be mined...`)

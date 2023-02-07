@@ -9,6 +9,7 @@ export * from "./general"
 export * from "./config"
 export * from "./custom"
 export * from "./base"
+export * from "./tx"
 
 export default {
   logger,
