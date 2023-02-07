@@ -1,7 +1,7 @@
 import { ParaspaceMM, Types } from "paraspace-api"
 import { Runtime, runtime } from "../runtime"
 import { SimpleMatchOrder } from "../types"
-import { Alert, logger, mapErrMsg, toEtherscanLink } from "@para-space/utils"
+import { Alert, logger, mapErrMsg, toEtherscanLink, getOptMaxFeePerGas } from "@para-space/utils"
 import { BigNumber, ethers } from "ethers"
 import { GLOBAL_OVERRIDES, StakingType } from "../constant"
 
@@ -165,7 +165,8 @@ const claimForMatchedOrderAndCompoundWithSimulation = async (
     }
     options = {
         ...options,
-        ...GLOBAL_OVERRIDES
+        ...GLOBAL_OVERRIDES,
+        maxFeePerGas: await getOptMaxFeePerGas()
     }
     const tx = await p2pPairStaking.claimForMatchedOrderAndCompound(orderHashes, options)
     logger.debug(`claimForMatchedOrderAndCompound tx hash: ${tx.hash}, wait for tx to be mined...`)
