@@ -36,18 +36,18 @@ export const getGlobalConfig = (): GlobalConfig => ({
   net: {
     environment: getStringEnv("ETH_ENVIRONMENT") || "development",
     networkName: getStringEnv("ETH_NETWORK_NAME") || "goerli",
-    endpoint: getStringEnv("ETH_ENDPOINT") || "",
+    endpoint: getStringEnv("ETH_ENDPOINT") || ""
   },
   wallet: {
     privateKey: getStringEnv("ETH_PRIVATE_KEY") || "",
     keystoreDir: getStringEnv("KEYSTORE_DIR") || "keystore/default",
     keystoreName: getStringEnv("KEYSTORE_NAME") || "",
     base64Password: getStringEnv("PASSWORD_BASE64") || "",
-    plainPassword: getStringEnv("PASSWORD") || "",
+    plainPassword: getStringEnv("PASSWORD") || ""
   },
   general: {
     scanInterval: getNumEnv("SCAN_INTERVAL") || 0.5,
-    structuredLog: getBooleanEnv("STRUCTURED_LOG"),
+    structuredLog: getBooleanEnv("STRUCTURED_LOG")
   },
   alert: {
     slackAppName: getStringEnv("SLACK_APP_NAME") || "",

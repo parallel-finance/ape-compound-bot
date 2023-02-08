@@ -1,11 +1,20 @@
-import { Alert, getPasswordFromLocalOrConsole, logger, mapErrMsg, sleep, UtilsBox } from "@para-space/utils"
+import {
+    Alert,
+    getPasswordFromLocalOrConsole,
+    logger,
+    mapErrMsg,
+    sleep,
+    UtilsBox,
+    utilsBox,
+    ContractAddress,
+    types as LoggerTypes,
+    getBooleanEnv
+} from "@para-space/utils"
 import { Environment, NetworkName, ParaspaceMM, Provider, Types } from "paraspace-api"
 import dotenv from "dotenv"
 import { ethers, Wallet } from "ethers"
 import path from "path"
 import fs from "fs"
-import { ContractAddress, types as LoggerTypes } from "@para-space/utils"
-import { utilsBox } from "@para-space/utils"
 import { keystore } from "@para-space/keystore"
 
 dotenv.config({ path: ".env" })
@@ -14,16 +23,21 @@ export let runtime: {
     provider: Provider
     wallet: Wallet
     state: {
-        balanceLow: boolean,
+        balanceLow: boolean
     }
     contracts: {
-        nBAYC: ContractAddress
-        nMAYC: ContractAddress
+        BAKC: ContractAddress
         apeCoinStaking: ContractAddress
         pool: ContractAddress
+        nBAYC: ContractAddress
+        nMAYC: ContractAddress
+        nBAKC: ContractAddress
     }
-    isMainnet: boolean,
-    networkName: NetworkName,
+    config: {
+        compoundBakc: boolean
+    }
+    isMainnet: boolean
+    networkName: NetworkName
     pagerduty: {
         enable: boolean
         webhook: string
@@ -32,7 +46,7 @@ export let runtime: {
         enable: boolean
         appName: string
         webhook: string
-    },
+    }
     cloudWatch: {
         enable: boolean
     }
@@ -50,16 +64,23 @@ export namespace Runtime {
         while (true) {
             try {
                 logger.info("start to run...")
-                await checkBalanceSufficient(runtime.wallet.address, ethers.utils.parseEther("0.2").toString())
+                await checkBalanceSufficient(
+                    runtime.wallet.address,
+                    ethers.utils.parseEther("0.2").toString()
+                )
                 await worker()
                 heartBeat()
-                logger.info(`don't worry, still alive... interval ${runtime.interval.scan / 60 / 1000} m`)
+                logger.info(
+                    `don't worry, still alive... interval ${runtime.interval.scan / 60 / 1000} m`
+                )
             } catch (e) {
                 if (retryCount-- > 0) {
                     logger.error(`process error: ${mapErrMsg(e)}`)
                     console.trace(e)
                 } else {
-                    const errMsg = `Too many retry times, service failed to run... please check it. ${mapErrMsg(e)}}`
+                    const errMsg = `Too many retry times, service failed to run... please check it. ${mapErrMsg(
+                        e
+                    )}}`
                     logger.error(errMsg)
 
                     sendPagerduty({
@@ -67,10 +88,10 @@ export namespace Runtime {
                             summary: errMsg,
                             severity: "warning",
                             source: runtime.networkName,
-                            group: runtime.networkName,
+                            group: runtime.networkName
                         },
                         event_action: "trigger",
-                        client: "paraspace-ape-compound-bot",
+                        client: "paraspace-ape-compound-bot"
                     })
                 }
             }
@@ -84,52 +105,52 @@ export namespace Runtime {
         UtilsBox.init(envs)
 
         const {
-            net: {
-                environment,
-                networkName,
-                endpoint,
-            },
-            wallet: {
-                privateKey,
-                keystoreDir,
-                keystoreName,
-                plainPassword,
-                base64Password,
-            },
-            alert: {
-                slackAppName,
-                slackWebhook,
-                cloudWatchNameSpace,
-                pagerdutyWebhook,
-            },
-            general: {
-                scanInterval,
-                structuredLog
-            }
+            net: { environment, networkName, endpoint },
+            wallet: { privateKey, keystoreDir, keystoreName, plainPassword, base64Password },
+            alert: { slackAppName, slackWebhook, cloudWatchNameSpace, pagerdutyWebhook },
+            general: { scanInterval, structuredLog }
         } = UtilsBox.getConfig()
 
         // Check if the environment and network name is valid
-        if (!Object.values(Environment).includes(<Environment>environment)
-            || !Object.values(NetworkName).includes(<NetworkName>networkName)) {
+        if (
+            !Object.values(Environment).includes(<Environment>environment) ||
+            !Object.values(NetworkName).includes(<NetworkName>networkName)
+        ) {
             throw new Error(`Invalid environment: ${environment} or networkName: ${networkName}`)
         }
 
-        const provider: Provider = new Provider(<Environment>environment, <NetworkName>networkName, endpoint)
+        const provider: Provider = new Provider(
+            <Environment>environment,
+            <NetworkName>networkName,
+            endpoint
+        )
         await provider.init()
 
-        const { ERC721, protocol } = provider.getContracts();
-        const pool: Types.IPool = await provider.connectContract(ParaspaceMM.Pool);
-        const baycData = await pool.getReserveData(ERC721.BAYC);
-        const maycData = await pool.getReserveData(ERC721.MAYC);
+        // get paraspace protocol data
+        const { ERC721, protocol } = provider.getContracts()
+        const pool: Types.IPool = await provider.connectContract(ParaspaceMM.Pool)
+        const baycData = await pool.getReserveData(ERC721.BAYC)
+        const maycData = await pool.getReserveData(ERC721.MAYC)
 
+        const compoundBakc = getBooleanEnv("COMPOUND_BAKC")
+
+        // get wallet data
         let wallet: Wallet
         if (privateKey) {
-            wallet = (privateKey.indexOf(" ") < 0 ? new Wallet(privateKey) : Wallet.fromMnemonic(privateKey))
+            wallet =
+                privateKey.indexOf(" ") < 0
+                    ? new Wallet(privateKey)
+                    : Wallet.fromMnemonic(privateKey)
         } else {
-            if (!keystoreName) throw new Error("Please give a keystore filename in .env");
+            if (!keystoreName) throw new Error("Please give a keystore filename in .env")
 
-            const keystorePath = path.resolve(keystoreDir || keystore.params.DefaultKeystoreDir + keystore.types.KeystoreTypeDefault, keystoreName.toLowerCase());
-            if (!fs.existsSync(keystorePath)) throw new Error(`Keystore path is not found, ${keystorePath}`)
+            const keystorePath = path.resolve(
+                keystoreDir ||
+                    keystore.params.DefaultKeystoreDir + keystore.types.KeystoreTypeDefault,
+                keystoreName.toLowerCase()
+            )
+            if (!fs.existsSync(keystorePath))
+                throw new Error(`Keystore path is not found, ${keystorePath}`)
 
             let password = base64Password || plainPassword
             if (!password) password = await getPasswordFromLocalOrConsole()
@@ -140,11 +161,12 @@ export namespace Runtime {
                 keystore.types.KeystoreTypeDefault,
                 password,
                 {
-                    isBase64: !!base64Password,
+                    isBase64: !!base64Password
                 }
             )
         }
 
+        // get monitor config
         const useSlack = !!slackWebhook
         const useCloudWatch = !!cloudWatchNameSpace
         const usePagerduty = !!pagerdutyWebhook
@@ -157,16 +179,23 @@ export namespace Runtime {
             provider,
             wallet: wallet.connect(provider.getProvider()),
             state: {
-                balanceLow: false,
+                balanceLow: false
             },
             contracts: {
+                BAKC: protocol.BAKC,
                 apeCoinStaking: protocol.apeCoinStaking,
                 pool: protocol.pool,
                 nBAYC: baycData.xTokenAddress,
-                nMAYC: maycData.xTokenAddress
+                nMAYC: maycData.xTokenAddress,
+                nBAKC: compoundBakc ? (await pool.getReserveData(protocol.BAKC)).xTokenAddress : ""
+            },
+            config: {
+                compoundBakc
             },
             networkName: <NetworkName>networkName,
-            isMainnet: [NetworkName.fork_mainnet, NetworkName.mainnet].includes(<NetworkName>networkName),
+            isMainnet: [NetworkName.fork_mainnet, NetworkName.mainnet].includes(
+                <NetworkName>networkName
+            ),
             pagerduty: {
                 enable: usePagerduty,
                 webhook: pagerdutyWebhook
@@ -180,7 +209,7 @@ export namespace Runtime {
                 enable: useCloudWatch
             },
             interval: {
-                scan: scanInterval * 60 * 1000,
+                scan: scanInterval * 60 * 1000
             }
         }
     }
@@ -194,16 +223,15 @@ export namespace Runtime {
         })
     }
 
-    async function checkBalanceSufficient(
-        address: string,
-        amount: string,
-    ): Promise<boolean> {
+    async function checkBalanceSufficient(address: string, amount: string): Promise<boolean> {
         const balance = await runtime.provider.getProvider().getBalance(address)
         const belowThanThreshold = balance.lt(amount)
         const inBalanceLowStatus = runtime.state.balanceLow
         if (belowThanThreshold && !inBalanceLowStatus) {
             runtime.state.balanceLow = true
-            const warnMsg = `The balance of ${address} is low (${ethers.utils.formatEther(balance)}), please check it.`
+            const warnMsg = `The balance of ${address} is low (${ethers.utils.formatEther(
+                balance
+            )}), please check it.`
             logger.warn(warnMsg)
             Alert.warn(warnMsg)
         } else if (!belowThanThreshold && inBalanceLowStatus) {

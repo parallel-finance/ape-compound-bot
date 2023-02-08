@@ -1,3 +1,3 @@
-export const KeystoreTypeMiner = "miner";
-export const KeystoreTypeFee = "fee";
-export const KeystoreTypeDefault = "default";
+export const KeystoreTypeMiner = "miner"
+export const KeystoreTypeFee = "fee"
+export const KeystoreTypeDefault = "default"

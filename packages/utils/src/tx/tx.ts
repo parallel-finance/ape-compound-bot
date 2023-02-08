@@ -1,12 +1,13 @@
 import { BigNumber, ethers } from "ethers"
 
-export const getOptMaxFeePerGas = async (): Promise<BigNumber> => {
-  const nowUTCHour = new Date().getUTCHours()
-
-  // UTC 2:00 ~ 14:00
-  if (2 <= nowUTCHour && nowUTCHour < 14) {
-    return ethers.utils.parseUnits("20", "gwei")
-  } else {
-    return ethers.utils.parseUnits("25", "gwei")
-  }
+export const getOptMaxFeePerGas = async (
+  curGasPrice: BigNumber,
+  isMainnet: boolean
+): Promise<BigNumber> => {
+  const maxGasPrice = ethers.utils.parseUnits("30", "gwei")
+  const midGasPrice = ethers.utils.parseUnits("25", "gwei")
+  if (!isMainnet) return maxGasPrice
+  if (curGasPrice.gte(maxGasPrice)) return maxGasPrice
+  if (curGasPrice.gte(midGasPrice)) return midGasPrice
+  return curGasPrice
 }

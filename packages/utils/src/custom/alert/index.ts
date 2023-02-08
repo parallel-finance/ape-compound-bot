@@ -46,7 +46,9 @@ export async function initSlackAlert() {
     logger.debug("slack boot init...")
     boot.init()
 
-    await info("slack alert initialized :)", [{ name: "project", value: "paraspace-ape-compound-bot" }])
+    await info("slack alert initialized :)", [
+      { name: "project", value: "paraspace-ape-compound-bot" }
+    ])
   } catch (err) {
     const errMsg = `alert failed to initialize :( ${mapErrMsg(err)}`
     logger.error(errMsg)

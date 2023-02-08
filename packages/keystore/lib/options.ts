@@ -1,11 +1,11 @@
 // Keystore options
 export type Options = {
-	// Encode password by BASE64
-	isBase64?: boolean
+    // Encode password by BASE64
+    isBase64?: boolean
 
-	// Use keystore cache
-	useCache?: boolean
+    // Use keystore cache
+    useCache?: boolean
 
-	// Keystore directory
-	keystoreDir?: string
+    // Keystore directory
+    keystoreDir?: string
 }
