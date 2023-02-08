@@ -103,7 +103,10 @@ const claimApeAndCompoundWithSimulation = async (
     options = {
         ...options,
         ...GLOBAL_OVERRIDES,
-        maxFeePerGas: await getOptMaxFeePerGas()
+        maxFeePerGas: await getOptMaxFeePerGas(
+            await runtime.provider.getProvider().getGasPrice(),
+            runtime.isMainnet
+        )
     }
     const tx = info.isBakc
         ? await pool.claimPairedApeAndCompound(nftAsset, users, nftPairs, options)

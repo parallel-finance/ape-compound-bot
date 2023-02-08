@@ -22,8 +22,8 @@ export enum StakingType {
 export const paraspaceConfigurations = {
     requestedBlockRangeLimit: 1500,
     p2pPairStartBlock: {
-        mainnet: 16411893,
+        mainnet: 16582462,
         goerli: 8426055,
-        fork_mainnet: 16411893
+        fork_mainnet: 16582462
     }
 }

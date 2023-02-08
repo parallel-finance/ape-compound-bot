@@ -162,7 +162,10 @@ const claimForMatchedOrderAndCompoundWithSimulation = async (
     options = {
         ...options,
         ...GLOBAL_OVERRIDES,
-        maxFeePerGas: await getOptMaxFeePerGas()
+        maxFeePerGas: await getOptMaxFeePerGas(
+            await runtime.provider.getProvider().getGasPrice(),
+            runtime.isMainnet
+        )
     }
     const tx = await p2pPairStaking.claimForMatchedOrderAndCompound(orderHashes, options)
     logger.debug(`claimForMatchedOrderAndCompound tx hash: ${tx.hash}, wait for tx to be mined...`)

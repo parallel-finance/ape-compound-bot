@@ -44,7 +44,7 @@
     "ethers": "5.7.2",
     "fs-extra": "^11.1.0",
     "lodash": "^4.17.21",
-    "paraspace-api": "^0.2.50"
+    "paraspace-api": "^0.2.51"
   },
   "devDependencies": {
     "@commitlint/cli": "17.0.3",
