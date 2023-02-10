@@ -12,8 +12,8 @@ async function main() {
     const worker = async () => {
         const compoundInfo: ValidCompoundInfo = await fetchCompoundInfo()
         await claimAndCompound(compoundInfo)
-        // const p2pCompoundInfo: SimpleMatchOrder[] = await fetchP2PCompoundInfo()
-        // await claimAndCompoundForP2PPairStaking(p2pCompoundInfo)
+        const p2pCompoundInfo: SimpleMatchOrder[] = await fetchP2PCompoundInfo()
+        await claimAndCompoundForP2PPairStaking(p2pCompoundInfo)
     }
     await Runtime.run(worker)
 

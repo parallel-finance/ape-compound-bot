@@ -23,7 +23,7 @@ export const paraspaceConfigurations = {
     requestedBlockRangeLimit: 1500,
     p2pPairStartBlock: {
         mainnet: 16582462,
-        goerli: 8426055,
+        goerli: 8465573,
         fork_mainnet: 16582462
     }
 }

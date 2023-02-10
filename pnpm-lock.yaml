@@ -30,7 +30,7 @@ importers:
       jest-config: 28.1.3
       lint-staged: ^13.0.3
       lodash: ^4.17.21
-      paraspace-api: ^0.2.51
+      paraspace-api: ^0.2.52
       prettier: ^2.7.1
       rimraf: ^3.0.2
       semantic-release: ^19.0.3
@@ -47,7 +47,7 @@ importers:
       ethers: 5.7.2
       fs-extra: 11.1.0
       lodash: 4.17.21
-      paraspace-api: 0.2.51
+      paraspace-api: 0.2.52
     devDependencies:
       '@commitlint/cli': 17.0.3
       '@commitlint/config-conventional': 17.0.3
@@ -9048,8 +9048,8 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /paraspace-api/0.2.51:
-    resolution: {integrity: sha512-1seW30NskqyAUmSfxCPeXKkvixGV4s4UctlemgMOzoXD2zSJdZ6cZ0mjd8E2FiVESMpPux/TXZEPeYu9d/ytsw==}
+  /paraspace-api/0.2.52:
+    resolution: {integrity: sha512-mJlWN+1jLPSI3GxgIEU4LMcrmG9dNzX2T0izfFVx/cX1r8nxq6AICk2F4Q8PQjFORad5fzR+w1oyEdCGdwQwuA==}
     engines: {node: '>=10'}
     dependencies:
       ethers: 5.7.2
