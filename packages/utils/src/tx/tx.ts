@@ -9,5 +9,5 @@ export const getOptMaxFeePerGas = async (
   if (!isMainnet) return maxGasPrice
   if (curGasPrice.gte(maxGasPrice)) return maxGasPrice
   if (curGasPrice.gte(midGasPrice)) return midGasPrice
-  return curGasPrice
+  return curGasPrice.add(ethers.utils.parseUnits("1", "gwei"))
 }
