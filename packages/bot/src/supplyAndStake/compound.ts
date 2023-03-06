@@ -238,7 +238,8 @@ export function splitCompoundInfos(compoundInfo: ValidCompoundInfo, limit: numbe
                     isBakc: collectionInfo.isBakc,
                     nftPairs: []
                 }
-                tokenIdLimit = limit
+                tokenIdLimit =
+                    collection === "bayc" && baycSplitLimit <= limit ? baycSplitLimit : limit
             }
         }
 
