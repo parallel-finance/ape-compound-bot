@@ -17,7 +17,7 @@ export const splitOrders = (orders: SimpleMatchOrder[], limit: number): SimpleMa
 }
 
 export const claimAndCompoundForP2PPairStaking = async (orders: SimpleMatchOrder[]) => {
-    const batches = splitOrders(orders, 20)
+    const batches = splitOrders(orders, 30)
     logger.info(
         `Try to claimForMatchedOrderAndCompound for ${orders.length} orders in ${batches.length} txs`
     )

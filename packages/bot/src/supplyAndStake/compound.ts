@@ -177,7 +177,7 @@ export async function resolveErrMsg(info: CompoundInfo, e: any) {
 
 export function splitCompoundInfos(compoundInfo: ValidCompoundInfo, limit: number): CompoundInfo[] {
     let splitCompoundInfos: CompoundInfo[] = []
-    const baycSplitLimit = 15
+    const baycSplitLimit = 30
     for (const [collection, collectionInfo] of Object.entries(compoundInfo)) {
         if (!compoundInfo || collectionInfo.users.length === 0) {
             logger.info(`No ${collection} to claim and compound`)
