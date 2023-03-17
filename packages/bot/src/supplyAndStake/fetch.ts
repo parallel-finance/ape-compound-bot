@@ -15,7 +15,7 @@ const requestBatchNFTOwnerInfo = async (contract: string, tokenIds: string[]) =>
         const calls = tokenIds.map(tokenId => nft.ownerOf(tokenId))
         return (
             await Promise.all(
-                chunk(calls, 2000).map(batch => runtime.provider.getMulticallProvider().all(batch))
+                chunk(calls, 1000).map(batch => runtime.provider.getMulticallProvider().all(batch))
             )
         ).flat()
     } catch (e) {

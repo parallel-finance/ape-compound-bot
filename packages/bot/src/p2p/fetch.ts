@@ -69,7 +69,7 @@ const requestMatchedOrderInfo = async (orderHashes: string[]): Promise<SimpleMat
     try {
         const calls = orderHashes.map(hash => p2pPairStaking.matchedOrders(hash))
         const callResults = await Promise.all(
-            chunk(calls, 2000).map(batch => runtime.provider.getMulticallProvider().all(batch))
+            chunk(calls, 1000).map(batch => runtime.provider.getMulticallProvider().all(batch))
         )
         return callResults
             .flat()
