@@ -1,5 +1,5 @@
 # ===== FIRST STAGE ======
-FROM node:14.17.0 as builder
+FROM node:16 as builder
 RUN curl -f https://get.pnpm.io/v6.16.js | node - add --global pnpm
 
 LABEL description="This is the build stage for paraspace-ape-compound-bot. Here we create the dist."
@@ -13,7 +13,7 @@ ADD . /paraspace-ape-compound-bot
 RUN pnpm install -r --offline && pnpm build
 
 # ===== SECOND STAGE ======
-FROM node:14.17.0
+FROM node:16
 LABEL description="This is the 2nd stage: a very small image where we copy the paraspace-ape-compound-bot."
 
 COPY --from=builder /paraspace-ape-compound-bot /usr/local/lib/paraspace-ape-compound-bot
