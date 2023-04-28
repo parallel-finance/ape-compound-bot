@@ -7,7 +7,7 @@ import { cloneDeep } from "lodash"
 import { GLOBAL_OVERRIDES } from "../constant"
 
 export async function claimAndCompound(compoundInfo: ValidCompoundInfo) {
-    const batches = splitCompoundInfos(compoundInfo, 40)
+    const batches = splitCompoundInfos(compoundInfo, 80)
     logger.info("Try to claimAndCompound, split into " + batches.length + " batches")
     for (const batch of batches) {
         if (!batch || batch.users.length === 0) continue
@@ -112,7 +112,7 @@ const claimApeAndCompoundWithSimulation = async (
         ? await pool.claimPairedApeAndCompound(nftAsset, users, nftPairs, options)
         : await pool.claimApeAndCompound(nftAsset, users, tokenIds, options)
     logger.debug(`${method} tx hash: ${tx.hash}, wait for tx to be mined...`)
-    await tx.wait(5)
+    await tx.wait(2)
     return [tx.hash, ""]
 }
 
