@@ -23,8 +23,8 @@ importers:
         specifier: ^4.17.21
         version: 4.17.21
       paraspace-api:
-        specifier: ^0.2.53
-        version: 0.2.53
+        specifier: ^0.3.25
+        version: 0.3.25
     devDependencies:
       '@commitlint/cli':
         specifier: 17.0.3
@@ -2537,6 +2537,14 @@ packages:
     dependencies:
       '@octokit/openapi-types': 14.0.0
     dev: true
+
+  /@paraspace-org/ethers-multicall@0.2.5(ethers@5.7.2):
+    resolution: {integrity: sha512-hkSFZ7zGeUmUSFznYHx43Y7iDctURB1rDIZV7SY2ERCbrjJIj0tftPdr3hEfAUOm0UTwpG6xNzItRhtDl3IgGQ==}
+    peerDependencies:
+      ethers: ^5.0.0
+    dependencies:
+      ethers: 5.7.2
+    dev: false
 
   /@rollup/plugin-babel@5.3.1(@babel/core@7.20.7)(rollup@1.32.1):
     resolution: {integrity: sha512-WFfdLWU/xVWKeRQnKmIAQULUI7Il0gZnBIH/ZFO069wYIfPu+8zrfp/KMW0atmELoRDq8FbiP3VCss9MhCut7Q==}
@@ -5567,14 +5575,6 @@ packages:
     resolution: {integrity: sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==}
     engines: {node: '>=0.10.0'}
     dev: true
-
-  /ethers-multicall@0.2.3(ethers@5.7.2):
-    resolution: {integrity: sha512-RaWQuLy+HzeKOibptlc9RZ6j7bT1H6VnkdAKTHiLx2t/lpyfS2ckXHdQhhRbCaXNc1iu6CgoisgMejxKHg84tg==}
-    peerDependencies:
-      ethers: ^5.0.0
-    dependencies:
-      ethers: 5.7.2
-    dev: false
 
   /ethers@5.7.2:
     resolution: {integrity: sha512-wswUsmWo1aOK8rR7DIKiWSw9DbLWe6x98Jrn8wcTflTVvaXhAMaB5zGAXy0GYQEQp9iO1iSHWVyARQm11zUtyg==}
@@ -9110,12 +9110,12 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /paraspace-api@0.2.53:
-    resolution: {integrity: sha512-d24uMT7XN/BBEix/ole25vRKiQpoT2+Cmt0I43YKmAYEms3vMERF8nTG73XKCCQ5wvK3jXd5gQmqbkm9wQ97tw==}
+  /paraspace-api@0.3.25:
+    resolution: {integrity: sha512-EQs2uncr0zK+NMdeLcYNJHQjb+E+eCVFSP/y72tIngyX+zkv272gIW+c20qDjxGdbhnj59r2t38kbo88Hu942A==}
     engines: {node: '>=10'}
     dependencies:
+      '@paraspace-org/ethers-multicall': 0.2.5(ethers@5.7.2)
       ethers: 5.7.2
-      ethers-multicall: 0.2.3(ethers@5.7.2)
       interval-promise: 1.4.0
     transitivePeerDependencies:
       - bufferutil

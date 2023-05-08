@@ -10,12 +10,20 @@ import {
     types as LoggerTypes,
     getBooleanEnv
 } from "@para-space/utils"
-import { Environment, NetworkName, ParaspaceMM, Provider, Types } from "paraspace-api"
+import {
+    Environment,
+    NetworkName,
+    ParaSpaceEthMM,
+    Provider,
+    RPCProviderType,
+    Types
+} from "paraspace-api"
 import dotenv from "dotenv"
 import { ethers, Wallet } from "ethers"
 import path from "path"
 import fs from "fs"
 import { keystore } from "@para-space/keystore"
+import { EthereumERC721Config } from "paraspace-api/dist/provider/types"
 
 dotenv.config({ path: ".env" })
 
@@ -122,13 +130,15 @@ export namespace Runtime {
         const provider: Provider = new Provider(
             <Environment>environment,
             <NetworkName>networkName,
-            endpoint
+            [{ endpoint, type: RPCProviderType.ArchiveRPC }]
         )
         await provider.init()
 
         // get paraspace protocol data
-        const { ERC721, protocol } = provider.getContracts()
-        const pool: Types.IPool = await provider.connectContract(ParaspaceMM.Pool)
+        const contracts = provider.getContracts()
+        const ERC721 = contracts.ERC721 as EthereumERC721Config
+        const protocol = contracts.protocol
+        const pool: Types.IPool = await provider.connectContract(ParaSpaceEthMM.Pool)
         const baycData = await pool.getReserveData(ERC721.BAYC)
         const maycData = await pool.getReserveData(ERC721.MAYC)
 
@@ -182,12 +192,12 @@ export namespace Runtime {
                 balanceLow: false
             },
             contracts: {
-                BAKC: protocol.BAKC,
+                BAKC: ERC721.BAKC,
                 apeCoinStaking: protocol.apeCoinStaking,
                 pool: protocol.pool,
                 nBAYC: baycData.xTokenAddress,
                 nMAYC: maycData.xTokenAddress,
-                nBAKC: compoundBakc ? (await pool.getReserveData(protocol.BAKC)).xTokenAddress : ""
+                nBAKC: compoundBakc ? (await pool.getReserveData(ERC721.BAKC)).xTokenAddress : ""
             },
             config: {
                 compoundBakc

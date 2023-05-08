@@ -2,11 +2,12 @@ import { mapErrMsg, sameAddress } from "@para-space/utils"
 import { logger } from "@para-space/utils"
 import { BigNumber, ethers } from "ethers"
 import { chunk } from "lodash"
-import { Types, ParaspaceMM, Factories } from "paraspace-api"
+import { Types, ParaSpaceEthMM, Factories } from "paraspace-api"
 import { APE_STAKING_POOL_ID } from "../constant"
 import { runtime } from "../runtime"
 import { strategy } from "../strategy"
 import { StakedToken, ValidCompoundInfo, ValidTokens } from "../types"
+import { EthereumERC721Config } from "paraspace-api/dist/provider/types"
 
 const requestBatchNFTOwnerInfo = async (contract: string, tokenIds: string[]) => {
     if (!tokenIds || tokenIds.length === 0) return []
@@ -50,7 +51,7 @@ const getValidBaycAndMaycStakedTokens = async (): Promise<{
     logger.debug("Try get valid BAYC and MAYC staked tokens...")
 
     const apeCoinStaking: Types.ApeCoinStaking = await runtime.provider.connectContract(
-        ParaspaceMM.ApeCoinStaking
+        ParaSpaceEthMM.ApeCoinStaking
     )
     const contracts = [runtime.contracts.nBAYC, runtime.contracts.nMAYC]
     const limits = [
@@ -100,7 +101,7 @@ const getValidBakcStakedTokens = async (): Promise<{
 }> => {
     logger.debug("Try get valid BAKC staked tokens...")
     const apeCoinStaking: Types.ApeCoinStaking = await runtime.provider.connectContract(
-        ParaspaceMM.ApeCoinStaking
+        ParaSpaceEthMM.ApeCoinStaking
     )
 
     const contracts = [runtime.contracts.nBAYC, runtime.contracts.nMAYC]
@@ -168,7 +169,7 @@ const getValidStakedTokens = async (): Promise<ValidTokens> => {
 }
 
 const filterByUserLimit = async (validTokens: ValidTokens): Promise<ValidCompoundInfo> => {
-    const { ERC721 } = runtime.provider.getContracts()
+    const ERC721 = runtime.provider.getContracts().ERC721 as EthereumERC721Config
     let ownerToTokenIds: Map<string, StakedToken[]>[] = [new Map(), new Map()]
     let ownerToBakcTokenIds: Map<string, StakedToken[]>[] = [new Map(), new Map()]
     const limits = [

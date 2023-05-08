@@ -1,4 +1,4 @@
-import { Factories, ParaspaceMM, Types } from "paraspace-api"
+import { Factories, ParaSpaceEthMM, Types } from "paraspace-api"
 import { APE_STAKING_POOL_ID, paraspaceConfigurations, StakingType } from "../constant"
 import { runtime } from "../runtime"
 import { splitRangeBySize, collectAndFlat, logger, mapErrMsg } from "@para-space/utils"
@@ -7,10 +7,11 @@ import { chunk } from "lodash"
 import { BigNumber, ethers } from "ethers"
 import { strategy } from "../strategy"
 import _ from "lodash"
+import { EthereumProtocolConfig } from "paraspace-api/dist/provider/types"
 
 const fetchValidMatchOrders = async (): Promise<string[]> => {
     const p2pPairStaking: Types.P2PPairStaking = await runtime.provider.connectContract(
-        ParaspaceMM.P2PPairStaking
+        ParaSpaceEthMM.P2PPairStaking
     )
     const startBlock = paraspaceConfigurations.p2pPairStartBlock[runtime.networkName]
     const endBlock = await runtime.provider.getProvider().getBlockNumber()
@@ -62,9 +63,10 @@ const fetchValidMatchOrders = async (): Promise<string[]> => {
 }
 
 const requestMatchedOrderInfo = async (orderHashes: string[]): Promise<SimpleMatchOrder[]> => {
+    const protocol = runtime.provider.getContracts().protocol as EthereumProtocolConfig
     const p2pPairStaking = runtime.provider.connectMultiAbi(
         Factories.P2PPairStaking__factory,
-        runtime.provider.getContracts().protocol.P2PPairStaking
+        protocol.P2PPairStaking
     )
     try {
         const calls = orderHashes.map(hash => p2pPairStaking.matchedOrders(hash))
@@ -90,10 +92,10 @@ const requestMatchedOrderInfo = async (orderHashes: string[]): Promise<SimpleMat
 
 const filterByRewardLimit = async (orders: SimpleMatchOrder[]): Promise<SimpleMatchOrder[]> => {
     const p2pPairStaking: Types.P2PPairStaking = await runtime.provider.connectContract(
-        ParaspaceMM.P2PPairStaking
+        ParaSpaceEthMM.P2PPairStaking
     )
     const apeCoinStaking: Types.ApeCoinStaking = await runtime.provider.connectContract(
-        ParaspaceMM.ApeCoinStaking
+        ParaSpaceEthMM.ApeCoinStaking
     )
 
     const stakes = await apeCoinStaking.getAllStakes(p2pPairStaking.address)

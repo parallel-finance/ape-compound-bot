@@ -1,4 +1,4 @@
-import { ParaspaceMM, Types } from "paraspace-api"
+import { ParaSpaceEthMM, Types } from "paraspace-api"
 import { Runtime, runtime } from "../runtime"
 import { SimpleMatchOrder } from "../types"
 import { Alert, logger, mapErrMsg, toEtherscanLink, getOptMaxFeePerGas } from "@para-space/utils"
@@ -127,7 +127,7 @@ const claimForMatchedOrderAndCompoundWithSimulation = async (
     }
 ): Promise<[string, string]> => {
     const p2pPairStaking: Types.P2PPairStaking = await runtime.provider.connectContract(
-        ParaspaceMM.P2PPairStaking,
+        ParaSpaceEthMM.P2PPairStaking,
         runtime.wallet
     )
     const orderHashes = orders.map(data => data.orderHash)

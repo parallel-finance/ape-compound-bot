@@ -5,6 +5,8 @@ import { fetchCompoundInfo } from "./supplyAndStake/fetch"
 import { fetchP2PCompoundInfo } from "./p2p/fetch"
 import { claimAndCompoundForP2PPairStaking } from "./p2p/compound"
 import { SimpleMatchOrder, ValidCompoundInfo } from "./types"
+import { getApeSwapPrices } from "./uniswapv3"
+import { swapApeFeeToETH } from "./feeToEth"
 
 async function main() {
     logger.info("Starting paraspace-ape-compound-bot")
@@ -14,6 +16,8 @@ async function main() {
         await claimAndCompound(compoundInfo)
         const p2pCompoundInfo: SimpleMatchOrder[] = await fetchP2PCompoundInfo()
         await claimAndCompoundForP2PPairStaking(p2pCompoundInfo)
+        // console.log(await getApeSwapPrices())
+        await swapApeFeeToETH()
     }
     await Runtime.run(worker)
 

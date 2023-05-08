@@ -47,3 +47,18 @@ export const percentMul = (val: BigNumberish, percent: BigNumberish) => {
 export const pow = function (val: string | number): EtherBN {
   return EtherBN.from(10).pow(EtherBN.from(val))
 }
+
+const hexRegex = /[A-Fa-fx]/g
+
+export const toHex = (n: BigNumberish, numBytes: number = 0) => {
+  const asHexString = EtherBN.isBigNumber(n)
+    ? n.toHexString().slice(2)
+    : typeof n === "string"
+    ? hexRegex.test(n)
+      ? n.replace(/0x/, "")
+      : Number(n).toString(16)
+    : Number(n).toString(16)
+  return `0x${asHexString.padStart(numBytes * 2, "0")}`
+}
+
+export const toBN = (n: BigNumberish) => EtherBN.from(toHex(n))

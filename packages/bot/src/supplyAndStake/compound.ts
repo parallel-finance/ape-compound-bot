@@ -1,13 +1,14 @@
 import { Alert, logger, mapErrMsg, toEtherscanLink, getOptMaxFeePerGas } from "@para-space/utils"
 import { BigNumber, ethers } from "ethers"
-import { ParaspaceMM, Types } from "paraspace-api"
+import { ParaSpaceEthMM, Types } from "paraspace-api"
 import { Runtime, runtime } from "../runtime"
 import { CompoundInfo, PairNft, ValidCompoundInfo } from "../types"
 import { cloneDeep } from "lodash"
 import { GLOBAL_OVERRIDES } from "../constant"
+import { getApeSwapPrices } from "../uniswapv3"
 
 export async function claimAndCompound(compoundInfo: ValidCompoundInfo) {
-    const batches = splitCompoundInfos(compoundInfo, 200)
+    const batches = splitCompoundInfos(compoundInfo, 150)
     logger.info("Try to claimAndCompound, split into " + batches.length + " batches")
     for (const batch of batches) {
         if (!batch || batch.users.length === 0) continue
@@ -67,14 +68,27 @@ const claimApeAndCompoundWithSimulation = async (
         force?: boolean
     }
 ): Promise<[string, string]> => {
-    const pool: Types.IPool = runtime.provider.connectContract(ParaspaceMM.Pool, runtime.wallet)
+    const pool: Types.IPool = runtime.provider.connectContract(ParaSpaceEthMM.Pool, runtime.wallet)
     const { nftAsset, users, tokenIds, nftPairs } = info
     const method = info.isBakc ? "claimPairedApeAndCompound" : "claimApeAndCompound"
+    const [apeToWethPrice, apeToUsdcPrice] = await getApeSwapPrices()
     if (!overrides?.disableCallStatic) {
         try {
             info.isBakc
-                ? await pool.callStatic.claimPairedApeAndCompound(nftAsset, users, nftPairs)
-                : await pool.callStatic.claimApeAndCompound(nftAsset, users, tokenIds)
+                ? await pool.callStatic.claimPairedApeAndCompound(
+                      nftAsset,
+                      users,
+                      nftPairs,
+                      apeToUsdcPrice,
+                      apeToWethPrice
+                  )
+                : await pool.callStatic.claimApeAndCompound(
+                      nftAsset,
+                      users,
+                      tokenIds,
+                      apeToUsdcPrice,
+                      apeToWethPrice
+                  )
             // No return and no error means the callStatic is successful
         } catch (e) {
             const errMsg = `callStatic ${method} failed ${mapErrMsg(e)}`
@@ -88,8 +102,20 @@ const claimApeAndCompoundWithSimulation = async (
     } else {
         try {
             const estimateGas: BigNumber = info.isBakc
-                ? await pool.estimateGas.claimPairedApeAndCompound(nftAsset, users, nftPairs)
-                : await pool.estimateGas.claimApeAndCompound(nftAsset, users, tokenIds)
+                ? await pool.estimateGas.claimPairedApeAndCompound(
+                      nftAsset,
+                      users,
+                      nftPairs,
+                      apeToUsdcPrice,
+                      apeToWethPrice
+                  )
+                : await pool.estimateGas.claimApeAndCompound(
+                      nftAsset,
+                      users,
+                      tokenIds,
+                      apeToUsdcPrice,
+                      apeToWethPrice
+                  )
             logger.info(`estimateGas ${method} ${estimateGas.toString()}`)
             options = {
                 gasLimit: estimateGas.add("100000")
@@ -109,8 +135,22 @@ const claimApeAndCompoundWithSimulation = async (
         )
     }
     const tx = info.isBakc
-        ? await pool.claimPairedApeAndCompound(nftAsset, users, nftPairs, options)
-        : await pool.claimApeAndCompound(nftAsset, users, tokenIds, options)
+        ? await pool.claimPairedApeAndCompound(
+              nftAsset,
+              users,
+              nftPairs,
+              apeToUsdcPrice,
+              apeToWethPrice,
+              options
+          )
+        : await pool.claimApeAndCompound(
+              nftAsset,
+              users,
+              tokenIds,
+              apeToUsdcPrice,
+              apeToWethPrice,
+              options
+          )
     logger.debug(`${method} tx hash: ${tx.hash}, wait for tx to be mined...`)
     await tx.wait(2)
     return [tx.hash, ""]

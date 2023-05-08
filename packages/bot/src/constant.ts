@@ -24,6 +24,8 @@ export const paraspaceConfigurations = {
     p2pPairStartBlock: {
         mainnet: 16602128,
         goerli: 8465573,
-        fork_mainnet: 16582462
+        fork_mainnet: 16582462,
+        arbitrum: 0,
+        arbitrum_goerli: 0
     }
 }
