@@ -5,7 +5,6 @@ import { fetchCompoundInfo } from "./supplyAndStake/fetch"
 import { fetchP2PCompoundInfo } from "./p2p/fetch"
 import { claimAndCompoundForP2PPairStaking } from "./p2p/compound"
 import { SimpleMatchOrder, ValidCompoundInfo } from "./types"
-import { getApeSwapPrices } from "./uniswapv3"
 import { swapApeFeeToETH } from "./feeToEth"
 
 async function main() {

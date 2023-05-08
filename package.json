@@ -25,7 +25,8 @@
     "build:docs": "typedoc --out docs packages",
     "test": "pnpm run -r test",
     "test:ci": "pnpm run -r test:ci",
-    "create:keystore": "ts-node packages/bot/scripts/create.ts"
+    "create:keystore": "ts-node packages/bot/scripts/create.ts",
+    "estimate": "node --unhandled-rejections=strict packages/bot/dist/estimate.js"
   },
   "lint-staged": {
     "{packages,tests}/**/*.ts": [

@@ -21,6 +21,10 @@ build: init
 run: init
 	pnpm -w run start
 
+.PHONY: estimate
+estimate: init
+	pnpm -w run estimate
+
 .PHONY: test
 test: init
 	pnpm -w test
