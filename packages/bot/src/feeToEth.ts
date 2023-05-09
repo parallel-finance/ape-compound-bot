@@ -22,7 +22,7 @@ export const swapApeFeeToETH = async () => {
         ERC20.APE,
         runtime.wallet
     )
-    const amountIn = (await ape.balanceOf(runtime.wallet.address)).div(2)
+    const amountIn = await ape.balanceOf(runtime.wallet.address)
 
     try {
         if ((await ape.allowance(runtime.wallet.address, uniswapV3Router.address)).lt(amountIn)) {
