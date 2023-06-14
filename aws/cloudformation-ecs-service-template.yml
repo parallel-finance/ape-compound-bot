@@ -33,10 +33,10 @@ Parameters:
     Default: 1
   TaskCpuSetting:
     Type: Number
-    Default: 2048
+    Default: 1024
   TaskMemorySetting:
     Type: Number
-    Default: 4096
+    Default: 2048
   PagerDutyIntegrationKey:
     Type: String
     Default: ''
