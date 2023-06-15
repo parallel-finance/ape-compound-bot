@@ -61,25 +61,27 @@ export namespace Runtime {
         logger.info(`Your address: ${runtime.wallet.address}`)
 
         let retryCount = 5
-        let hasStarted = false
         while (true) {
             try {
+                let hasStarted = false
                 const curHour = new Date().getUTCHours() + 8
                 // only run at UTC+8 8:00 or 17:00
-                if ((curHour === 8 || curHour === 17) && !hasStarted) {
-                    logger.info("start to run...")
-                    await checkBalanceSufficient(
-                        runtime.wallet.address,
-                        ethers.utils.parseEther("0.2").toString()
-                    )
-                    await worker()
-                    heartBeat()
-                    logger.info(
-                        `don't worry, still alive... interval ${
-                            runtime.interval.scan / 60 / 1000
-                        } m`
-                    )
-                    hasStarted = true
+                if (curHour === 8 || curHour === 17) {
+                    if (!hasStarted) {
+                        logger.info("start to run...")
+                        await checkBalanceSufficient(
+                            runtime.wallet.address,
+                            ethers.utils.parseEther("0.2").toString()
+                        )
+                        await worker()
+                        heartBeat()
+                        logger.info(
+                            `don't worry, still alive... interval ${
+                                runtime.interval.scan / 60 / 1000
+                            } m`
+                        )
+                        hasStarted = true
+                    }
                 } else {
                     hasStarted = false
                 }
