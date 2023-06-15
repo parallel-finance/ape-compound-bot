@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-
+  workflow_dispatch:
 jobs:
   wait-for-approval:
     runs-on: ubuntu-latest
