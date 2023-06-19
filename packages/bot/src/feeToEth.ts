@@ -11,7 +11,7 @@ export const swapApeFeeToETH = async () => {
     const cApe = runtime.provider.connectContract(ParaspaceMM.CAPE, runtime.wallet)
     const cApeBal = await cApe.balanceOf(runtime.wallet.address)
 
-    if (cApeBal.lt(ethers.utils.parseEther("1"))) return
+    if (cApeBal.lt(ethers.utils.parseEther("100"))) return
 
     const tx = await cApe.withdraw(cApeBal)
     await tx.wait(1)
