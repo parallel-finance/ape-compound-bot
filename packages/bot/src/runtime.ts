@@ -63,16 +63,28 @@ export namespace Runtime {
         let retryCount = 5
         while (true) {
             try {
-                logger.info("start to run...")
-                await checkBalanceSufficient(
-                    runtime.wallet.address,
-                    ethers.utils.parseEther("0.2").toString()
-                )
-                await worker()
-                heartBeat()
-                logger.info(
-                    `don't worry, still alive... interval ${runtime.interval.scan / 60 / 1000} m`
-                )
+                let hasStarted = false
+                const curHour = new Date().getUTCHours() + 8
+                // only run at UTC+8 8:00 or 17:00
+                if (curHour === 8 || curHour === 17) {
+                    if (!hasStarted) {
+                        logger.info("start to run...")
+                        await checkBalanceSufficient(
+                            runtime.wallet.address,
+                            ethers.utils.parseEther("0.2").toString()
+                        )
+                        await worker()
+                        heartBeat()
+                        logger.info(
+                            `don't worry, still alive... interval ${
+                                runtime.interval.scan / 60 / 1000
+                            } m`
+                        )
+                        hasStarted = true
+                    }
+                } else {
+                    hasStarted = false
+                }
             } catch (e) {
                 if (retryCount-- > 0) {
                     logger.error(`process error: ${mapErrMsg(e)}`)
@@ -169,7 +181,8 @@ export namespace Runtime {
         // get monitor config
         const useSlack = !!slackWebhook
         const useCloudWatch = !!cloudWatchNameSpace
-        const usePagerduty = !!pagerdutyWebhook
+        // const usePagerduty = !!pagerdutyWebhook
+        const usePagerduty = false
         if (useSlack) {
             await Alert.initSlackAlert()
             UtilsBox.initAlarmLogger({ useCloudWatch, chain: networkName, structuredLog })
