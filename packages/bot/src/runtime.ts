@@ -166,11 +166,7 @@ export namespace Runtime {
         )
         await v1Provider.init()
 
-        const v2Provider: Provider = new Provider(
-            <Environment>environment,
-            <NetworkName>networkName,
-            rpcs
-        )
+        const v2Provider: Provider = new Provider(<Environment>environment, v2NetworkName, rpcs)
         await v2Provider.init()
 
         const compoundBakc = getBooleanEnv("COMPOUND_BAKC")

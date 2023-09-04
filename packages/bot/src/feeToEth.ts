@@ -50,6 +50,8 @@ export const swapApeFeeToETH = async () => {
     )
     const amountIn = await ape.balanceOf(runtime.wallet.address)
 
+    if (amountIn.lte(ethers.utils.parseEther("200"))) return
+
     try {
         if ((await ape.allowance(runtime.wallet.address, uniswapV3Router.address)).lt(amountIn)) {
             const tx = await ape.approve(uniswapV3Router.address, ethers.constants.MaxUint256)
