@@ -1,4 +1,4 @@
-import { ParaspaceMM, Types } from "paraspace-api"
+import { ParaSpaceEthMM, EthTypes as Types, Provider } from "paraspace-provider"
 import { Runtime, runtime } from "../runtime"
 import { SimpleMatchOrder } from "../types"
 import { Alert, logger, mapErrMsg, toEtherscanLink, getOptMaxFeePerGas } from "@para-space/utils"
@@ -16,7 +16,12 @@ export const splitOrders = (orders: SimpleMatchOrder[], limit: number): SimpleMa
     return batchOrders
 }
 
-export const claimAndCompoundForP2PPairStaking = async (orders: SimpleMatchOrder[]) => {
+export const claimAndCompoundForP2PPairStaking = async (
+    isParaSpaceV1: boolean,
+    orders: SimpleMatchOrder[]
+) => {
+    const provider = isParaSpaceV1 ? runtime.v1Provider : runtime.v2Provider
+
     const batches = splitOrders(orders, 90)
     logger.info(
         `Try to claimForMatchedOrderAndCompound for ${orders.length} orders in ${batches.length} txs`
@@ -33,12 +38,15 @@ export const claimAndCompoundForP2PPairStaking = async (orders: SimpleMatchOrder
         logger.info(tokenMsgs)
 
         try {
-            const [txHash, errMsg] = await claimForMatchedOrderAndCompoundWithSimulation(batch)
+            const [txHash, errMsg] = await claimForMatchedOrderAndCompoundWithSimulation(
+                provider,
+                batch
+            )
             if (!!errMsg) {
                 throw new Error(errMsg)
             }
 
-            const receipt = await runtime.provider.getProvider().getTransactionReceipt(txHash)
+            const receipt = await provider.getProvider().getTransactionReceipt(txHash)
             const gasFee = parseFloat(
                 ethers.utils.formatEther(receipt.effectiveGasPrice.mul(receipt.gasUsed)).toString()
             ).toFixed(5)
@@ -120,14 +128,15 @@ const generateAlertMsgBody = (orders: SimpleMatchOrder[]) => {
 }
 
 const claimForMatchedOrderAndCompoundWithSimulation = async (
+    provider: Provider,
     orders: SimpleMatchOrder[],
     overrides?: {
         disableCallStatic?: boolean
         force?: boolean
     }
 ): Promise<[string, string]> => {
-    const p2pPairStaking: Types.P2PPairStaking = await runtime.provider.connectContract(
-        ParaspaceMM.P2PPairStaking,
+    const p2pPairStaking: Types.P2PPairStaking = await provider.connectContract(
+        ParaSpaceEthMM.P2PPairStaking,
         runtime.wallet
     )
     const orderHashes = orders.map(data => data.orderHash)
@@ -163,7 +172,7 @@ const claimForMatchedOrderAndCompoundWithSimulation = async (
         ...options,
         ...GLOBAL_OVERRIDES,
         maxFeePerGas: await getOptMaxFeePerGas(
-            await runtime.provider.getProvider().getGasPrice(),
+            await provider.getProvider().getGasPrice(),
             runtime.isMainnet
         )
     }

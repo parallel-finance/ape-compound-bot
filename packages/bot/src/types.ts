@@ -1,7 +1,8 @@
-import { NetworkConfiguration } from "@para-space/utils"
+import { ContractAddress } from "@para-space/utils"
 import { BigNumber } from "ethers"
+import { Provider, NetworkConfiguration } from "paraspace-provider"
 
-export type paraspaceConfigurations = {
+export type ParaspaceConfigurations = {
     requestedBlockRangeLimit: number
     p2pPairStartBlock: NetworkConfiguration<number>
 }
@@ -53,4 +54,14 @@ export type SimpleMatchOrder = {
     apeTokenId: number
     bakcTokenId: number
     pendingReward: BigNumber
+}
+
+export type NetworkContractParams = {
+    isParaSpaceV1: boolean
+    provider: Provider
+    contracts: {
+        nBAYC: ContractAddress
+        nMAYC: ContractAddress
+        nBAKC: ContractAddress
+    }
 }

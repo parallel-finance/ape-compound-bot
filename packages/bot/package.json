@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@para-space/keystore": "workspace:^0.1.0",
-    "@para-space/utils": "workspace:^0.1.0"
+    "@para-space/utils": "workspace:^0.1.0",
+    "paraspace-provider": "^0.3.78"
   }
 }
