@@ -10,7 +10,14 @@ import {
     types as LoggerTypes,
     getBooleanEnv
 } from "@para-space/utils"
-import { Environment, NetworkName, ParaspaceMM, Provider, Types } from "paraspace-api"
+import {
+    Environment,
+    EthTypes,
+    NetworkName,
+    ParaSpaceEthMM,
+    Provider,
+    RPCProviderType
+} from "paraspace-provider"
 import dotenv from "dotenv"
 import { ethers, Wallet } from "ethers"
 import path from "path"
@@ -20,7 +27,8 @@ import { keystore } from "@para-space/keystore"
 dotenv.config({ path: ".env" })
 
 export let runtime: {
-    provider: Provider
+    v1Provider: Provider
+    v2Provider: Provider
     wallet: Wallet
     state: {
         balanceLow: boolean
@@ -29,6 +37,13 @@ export let runtime: {
         BAKC: ContractAddress
         apeCoinStaking: ContractAddress
         pool: ContractAddress
+    }
+    v1Contracts: {
+        nBAYC: ContractAddress
+        nMAYC: ContractAddress
+        nBAKC: ContractAddress
+    }
+    v2Contracts: {
         nBAYC: ContractAddress
         nMAYC: ContractAddress
         nBAKC: ContractAddress
@@ -38,6 +53,7 @@ export let runtime: {
     }
     isMainnet: boolean
     networkName: NetworkName
+    v2NetworkName: NetworkName
     pagerduty: {
         enable: boolean
         webhook: string
@@ -131,20 +147,51 @@ export namespace Runtime {
             throw new Error(`Invalid environment: ${environment} or networkName: ${networkName}`)
         }
 
-        const provider: Provider = new Provider(
+        const v2NetworkName =
+            <NetworkName>networkName === NetworkName.goerli
+                ? NetworkName.goerli_v2
+                : NetworkName.mainnet_v2
+
+        const rpcs = [
+            {
+                endpoint,
+                type: RPCProviderType.ArchiveRPC
+            }
+        ]
+
+        const v1Provider: Provider = new Provider(
             <Environment>environment,
             <NetworkName>networkName,
-            endpoint
+            rpcs
         )
-        await provider.init()
+        await v1Provider.init()
 
-        // get paraspace protocol data
-        const { ERC721, protocol } = provider.getContracts()
-        const pool: Types.IPool = await provider.connectContract(ParaspaceMM.Pool)
+        const v2Provider: Provider = new Provider(<Environment>environment, v2NetworkName, rpcs)
+        await v2Provider.init()
+
+        const compoundBakc = getBooleanEnv("COMPOUND_BAKC")
+
+        // get paraspace v1 protocol data
+        const { ERC721, protocol } = v1Provider.getEthContracts()
+        const pool: EthTypes.IPool = await v1Provider.connectContract(ParaSpaceEthMM.Pool)
         const baycData = await pool.getReserveData(ERC721.BAYC)
         const maycData = await pool.getReserveData(ERC721.MAYC)
 
-        const compoundBakc = getBooleanEnv("COMPOUND_BAKC")
+        const v1Contracts = {
+            nBAYC: baycData.xTokenAddress,
+            nMAYC: maycData.xTokenAddress,
+            nBAKC: compoundBakc ? (await pool.getReserveData(protocol.BAKC)).xTokenAddress : ""
+        }
+        // get paraspace v2 protocol data
+        const v2Pool: EthTypes.IPool = await v2Provider.connectContract(ParaSpaceEthMM.Pool)
+        const v2BaycData = await v2Pool.getReserveData(ERC721.BAYC)
+        const v2MaycData = await v2Pool.getReserveData(ERC721.MAYC)
+
+        const v2Contracts = {
+            nBAYC: v2BaycData.xTokenAddress,
+            nMAYC: v2MaycData.xTokenAddress,
+            nBAKC: compoundBakc ? (await v2Pool.getReserveData(protocol.BAKC)).xTokenAddress : ""
+        }
 
         // get wallet data
         let wallet: Wallet
@@ -189,23 +236,24 @@ export namespace Runtime {
         }
 
         runtime = {
-            provider,
-            wallet: wallet.connect(provider.getProvider()),
+            v1Provider,
+            v2Provider,
+            wallet: wallet.connect(v1Provider.getProvider()),
             state: {
                 balanceLow: false
             },
             contracts: {
                 BAKC: protocol.BAKC,
                 apeCoinStaking: protocol.apeCoinStaking,
-                pool: protocol.pool,
-                nBAYC: baycData.xTokenAddress,
-                nMAYC: maycData.xTokenAddress,
-                nBAKC: compoundBakc ? (await pool.getReserveData(protocol.BAKC)).xTokenAddress : ""
+                pool: protocol.pool
             },
+            v1Contracts,
+            v2Contracts,
             config: {
                 compoundBakc
             },
             networkName: <NetworkName>networkName,
+            v2NetworkName,
             isMainnet: [NetworkName.fork_mainnet, NetworkName.mainnet].includes(
                 <NetworkName>networkName
             ),
@@ -237,7 +285,7 @@ export namespace Runtime {
     }
 
     async function checkBalanceSufficient(address: string, amount: string): Promise<boolean> {
-        const balance = await runtime.provider.getProvider().getBalance(address)
+        const balance = await runtime.v1Provider.getProvider().getBalance(address)
         const belowThanThreshold = balance.lt(amount)
         const inBalanceLowStatus = runtime.state.balanceLow
         if (belowThanThreshold && !inBalanceLowStatus) {

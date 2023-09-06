@@ -1,12 +1,14 @@
 import { Alert, logger, mapErrMsg, toEtherscanLink, getOptMaxFeePerGas } from "@para-space/utils"
 import { BigNumber, ethers } from "ethers"
-import { ParaspaceMM, Types } from "paraspace-api"
+import { EthTypes, ParaSpaceEthMM, Provider } from "paraspace-provider"
 import { Runtime, runtime } from "../runtime"
 import { CompoundInfo, PairNft, ValidCompoundInfo } from "../types"
 import { cloneDeep } from "lodash"
 import { GLOBAL_OVERRIDES } from "../constant"
 
-export async function claimAndCompound(compoundInfo: ValidCompoundInfo) {
+export async function claimAndCompound(isParaSpaceV1: boolean, compoundInfo: ValidCompoundInfo) {
+    const provider = isParaSpaceV1 ? runtime.v1Provider : runtime.v2Provider
+
     const batches = splitCompoundInfos(compoundInfo, 150)
     logger.info("Try to claimAndCompound, split into " + batches.length + " batches")
     for (const batch of batches) {
@@ -30,12 +32,12 @@ export async function claimAndCompound(compoundInfo: ValidCompoundInfo) {
         logger.info(`${method}..., signer address ${runtime.wallet.address}`)
 
         try {
-            const [txHash, errMsg] = await claimApeAndCompoundWithSimulation(info)
+            const [txHash, errMsg] = await claimApeAndCompoundWithSimulation(provider, info)
             if (!!errMsg) {
                 throw new Error(errMsg)
             }
 
-            const receipt = await runtime.provider.getProvider().getTransactionReceipt(txHash)
+            const receipt = await runtime.v1Provider.getProvider().getTransactionReceipt(txHash)
             const gasFee = parseFloat(
                 ethers.utils.formatEther(receipt.effectiveGasPrice.mul(receipt.gasUsed)).toString()
             ).toFixed(5)
@@ -61,13 +63,14 @@ export async function claimAndCompound(compoundInfo: ValidCompoundInfo) {
 }
 
 const claimApeAndCompoundWithSimulation = async (
+    provider: Provider,
     info: CompoundInfo,
     overrides?: {
         disableCallStatic?: boolean
         force?: boolean
     }
 ): Promise<[string, string]> => {
-    const pool: Types.IPool = runtime.provider.connectContract(ParaspaceMM.Pool, runtime.wallet)
+    const pool: EthTypes.IPool = provider.connectContract(ParaSpaceEthMM.Pool, runtime.wallet)
     const { nftAsset, users, tokenIds, nftPairs } = info
     const method = info.isBakc ? "claimPairedApeAndCompound" : "claimApeAndCompound"
     if (!overrides?.disableCallStatic) {
@@ -104,7 +107,7 @@ const claimApeAndCompoundWithSimulation = async (
         ...options,
         ...GLOBAL_OVERRIDES,
         maxFeePerGas: await getOptMaxFeePerGas(
-            await runtime.provider.getProvider().getGasPrice(),
+            await provider.getProvider().getGasPrice(),
             runtime.isMainnet
         )
     }

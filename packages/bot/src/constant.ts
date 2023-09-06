@@ -1,4 +1,5 @@
 import { ethers, Overrides } from "ethers"
+import { ParaspaceConfigurations } from "./types"
 
 export const GLOBAL_OVERRIDES: Overrides = {
     // maxFeePerGas: ethers.utils.parseUnits("100", "gwei"),
@@ -19,11 +20,14 @@ export enum StakingType {
     BAKCPairStaking = 2
 }
 
-export const paraspaceConfigurations = {
+export const paraspaceConfigurations: ParaspaceConfigurations = {
     requestedBlockRangeLimit: 10000,
     p2pPairStartBlock: {
         mainnet: 16602128,
+        mainnet_v2: 18016736,
         goerli: 8465573,
-        fork_mainnet: 16582462
+        goerli_v2: 9636428,
+        fork_mainnet: 16582462,
+        fork_mainnet_v2: 16582462
     }
 }

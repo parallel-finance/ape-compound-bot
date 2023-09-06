@@ -2,20 +2,24 @@ import { mapErrMsg, sameAddress } from "@para-space/utils"
 import { logger } from "@para-space/utils"
 import { BigNumber, ethers } from "ethers"
 import { chunk } from "lodash"
-import { Types, ParaspaceMM, Factories } from "paraspace-api"
+import { ComFactories, ComTypes, ParaSpaceEthMM, Provider } from "paraspace-provider"
 import { APE_STAKING_POOL_ID } from "../constant"
 import { runtime } from "../runtime"
 import { strategy } from "../strategy"
-import { StakedToken, ValidCompoundInfo, ValidTokens } from "../types"
+import { NetworkContractParams, StakedToken, ValidCompoundInfo, ValidTokens } from "../types"
 
-const requestBatchNFTOwnerInfo = async (contract: string, tokenIds: string[]) => {
+const requestBatchNFTOwnerInfo = async (
+    provider: Provider,
+    contract: string,
+    tokenIds: string[]
+) => {
     if (!tokenIds || tokenIds.length === 0) return []
     try {
-        const nft = runtime.provider.connectMultiAbi(Factories.IERC721__factory, contract)
+        const nft = provider.connectMultiAbi(ComFactories.IERC721Enumerable__factory, contract)
         const calls = tokenIds.map(tokenId => nft.ownerOf(tokenId))
         return (
             await Promise.all(
-                chunk(calls, 1000).map(batch => runtime.provider.getMulticallProvider().all(batch))
+                chunk(calls, 1000).map(batch => provider.getMulticallProvider().all(batch))
             )
         ).flat()
     } catch (e) {
@@ -24,13 +28,14 @@ const requestBatchNFTOwnerInfo = async (contract: string, tokenIds: string[]) =>
     }
 }
 
-const validateBAKCOwnerAndApproved = async (stakeBakc: StakedToken): Promise<boolean> => {
-    const nBakc = runtime.provider.connectFactory(
-        Factories.IERC721__factory,
-        runtime.contracts.nBAKC
-    )
-    const bakc: Types.IERC721 = runtime.provider.connectFactory(
-        Factories.IERC721__factory,
+const validateBAKCOwnerAndApproved = async (
+    params: NetworkContractParams,
+    stakeBakc: StakedToken
+): Promise<boolean> => {
+    const { provider, contracts } = params
+    const nBakc = provider.connectFactory(ComFactories.IERC721Enumerable__factory, contracts.nBAKC)
+    const bakc: ComTypes.IERC721Enumerable = provider.connectFactory(
+        ComFactories.IERC721Enumerable__factory,
         runtime.contracts.BAKC
     )
     const bakcOwner = await bakc.ownerOf(stakeBakc.tokenId)
@@ -43,23 +48,26 @@ const validateBAKCOwnerAndApproved = async (stakeBakc: StakedToken): Promise<boo
     )
 }
 
-const getValidBaycAndMaycStakedTokens = async (): Promise<{
+const getValidBaycAndMaycStakedTokens = async ({
+    provider,
+    contracts
+}: NetworkContractParams): Promise<{
     validBayc: StakedToken[]
     validMayc: StakedToken[]
 }> => {
     logger.debug("Try get valid BAYC and MAYC staked tokens...")
 
-    const apeCoinStaking: Types.ApeCoinStaking = await runtime.provider.connectContract(
-        ParaspaceMM.ApeCoinStaking
+    const apeCoinStaking: ComTypes.ApeCoinStaking = await provider.connectContract(
+        ParaSpaceEthMM.ApeCoinStaking
     )
-    const contracts = [runtime.contracts.nBAYC, runtime.contracts.nMAYC]
+    const nContracts = [contracts.nBAYC, contracts.nMAYC]
     const limits = [
         strategy[runtime.networkName].BAYC_TOKEN_PENDING_REWARD_LIMIT,
         strategy[runtime.networkName].MAYC_TOKEN_PENDING_REWARD_LIMIT
     ]
 
     const validTokens = await Promise.all(
-        contracts.map(async (contract, i) => {
+        nContracts.map(async (contract, i) => {
             const stakes = await apeCoinStaking.getAllStakes(contract)
             const validStakes: StakedToken[] = stakes
                 .filter(data =>
@@ -82,6 +90,7 @@ const getValidBaycAndMaycStakedTokens = async (): Promise<{
                 }))
 
             const nftOwners = await requestBatchNFTOwnerInfo(
+                provider,
                 contract,
                 validStakes.map(data => data.tokenId)
             )
@@ -94,20 +103,24 @@ const getValidBaycAndMaycStakedTokens = async (): Promise<{
     }
 }
 
-const getValidBakcStakedTokens = async (): Promise<{
+const getValidBakcStakedTokens = async (
+    params: NetworkContractParams
+): Promise<{
     validBakcForBayc: StakedToken[]
     validBakcForMayc: StakedToken[]
 }> => {
     logger.debug("Try get valid BAKC staked tokens...")
-    const apeCoinStaking: Types.ApeCoinStaking = await runtime.provider.connectContract(
-        ParaspaceMM.ApeCoinStaking
+    const { provider, contracts } = params
+
+    const apeCoinStaking: ComTypes.ApeCoinStaking = await provider.connectContract(
+        ParaSpaceEthMM.ApeCoinStaking
     )
 
-    const contracts = [runtime.contracts.nBAYC, runtime.contracts.nMAYC]
+    const nContracts = [contracts.nBAYC, contracts.nMAYC]
     const bakcLimits = strategy[runtime.networkName].BAKC_TOKEN_PENDING_REWARD_LIMIT
 
     const fetchedBakcTokens = await Promise.all(
-        contracts.map(async contract => {
+        nContracts.map(async contract => {
             const stakes = await apeCoinStaking.getAllStakes(contract)
             const fetchedStakes: StakedToken[] = stakes
                 .filter(data =>
@@ -127,6 +140,7 @@ const getValidBakcStakedTokens = async (): Promise<{
                     }
                 }))
             const mainTokenOwners = await requestBatchNFTOwnerInfo(
+                provider,
                 contract,
                 fetchedStakes.map(data => data.pair.mainTokenId)
             )
@@ -144,7 +158,7 @@ const getValidBakcStakedTokens = async (): Promise<{
         fetchedBakcTokens.map(
             async data =>
                 await Promise.all(
-                    data.map(async token => await validateBAKCOwnerAndApproved(token))
+                    data.map(async token => await validateBAKCOwnerAndApproved(params, token))
                 )
         )
     )
@@ -155,9 +169,11 @@ const getValidBakcStakedTokens = async (): Promise<{
     }
 }
 
-const getValidStakedTokens = async (): Promise<ValidTokens> => {
-    const mainTokens = await getValidBaycAndMaycStakedTokens()
-    const bakcTokens = runtime.config.compoundBakc ? await getValidBakcStakedTokens() : undefined
+const getValidStakedTokens = async (params: NetworkContractParams): Promise<ValidTokens> => {
+    const mainTokens = await getValidBaycAndMaycStakedTokens(params)
+    const bakcTokens = runtime.config.compoundBakc
+        ? await getValidBakcStakedTokens(params)
+        : undefined
 
     return {
         validBayc: mainTokens.validBayc,
@@ -168,7 +184,7 @@ const getValidStakedTokens = async (): Promise<ValidTokens> => {
 }
 
 const filterByUserLimit = async (validTokens: ValidTokens): Promise<ValidCompoundInfo> => {
-    const { ERC721 } = runtime.provider.getContracts()
+    const { ERC721 } = runtime.v1Provider.getEthContracts()
     let ownerToTokenIds: Map<string, StakedToken[]>[] = [new Map(), new Map()]
     let ownerToBakcTokenIds: Map<string, StakedToken[]>[] = [new Map(), new Map()]
     const limits = [
@@ -279,7 +295,11 @@ const filterByUserLimit = async (validTokens: ValidTokens): Promise<ValidCompoun
     }
 }
 
-export const fetchCompoundInfo = async (): Promise<ValidCompoundInfo> => {
-    const validStakedTokens = await getValidStakedTokens()
+export const fetchCompoundInfo = async (isParaSpaceV1: boolean): Promise<ValidCompoundInfo> => {
+    const validStakedTokens = await getValidStakedTokens({
+        isParaSpaceV1,
+        provider: isParaSpaceV1 ? runtime.v1Provider : runtime.v2Provider,
+        contracts: isParaSpaceV1 ? runtime.v1Contracts : runtime.v2Contracts
+    })
     return await filterByUserLimit(validStakedTokens)
 }

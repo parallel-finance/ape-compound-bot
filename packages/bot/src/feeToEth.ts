@@ -1,4 +1,4 @@
-import { Factories, ParaspaceMM, Types } from "paraspace-api"
+import { ComFactories, ComTypes, ParaSpaceEthMM } from "paraspace-provider"
 import { runtime } from "./runtime"
 import { ethers } from "ethers"
 import { Alert, logger, mapErrMsg, toEtherscanLink } from "@para-space/utils"
@@ -7,20 +7,35 @@ const APE_WETH_FEE = "3000"
 export const swapApeFeeToETH = async () => {
     logger.info("start withdraw cape to ape.")
 
-    const ERC20 = runtime.provider.getContracts().ERC20
-    const cApe = runtime.provider.connectContract(ParaspaceMM.CAPE, runtime.wallet)
-    const cApeBal = await cApe.balanceOf(runtime.wallet.address)
+    const ERC20 = runtime.v1Provider.getEthContracts().ERC20
+    // withdraw v1 cape to ape
+    {
+        const v1cApe = runtime.v1Provider.connectContract(ParaSpaceEthMM.CAPE, runtime.wallet)
+        const v1cApeBal = await v1cApe.balanceOf(runtime.wallet.address)
 
-    if (cApeBal.lt(ethers.utils.parseEther("100"))) return
+        if (v1cApeBal.gte(ethers.utils.parseEther("100"))) {
+            const tx = await v1cApe.withdraw(v1cApeBal)
+            await tx.wait(1)
+            logger.info(`withdraw ${ethers.utils.formatEther(v1cApeBal)} v1 cape to ape.`)
+        }
+    }
 
-    const tx = await cApe.withdraw(cApeBal)
-    await tx.wait(1)
-    logger.info(`withdraw ${ethers.utils.formatEther(cApeBal)} cape to ape.`)
+    // withdraw v2 cape to ape
+    {
+        const v2cApe = runtime.v2Provider.connectContract(ParaSpaceEthMM.CAPE, runtime.wallet)
+        const v2cApeBal = await v2cApe.balanceOf(runtime.wallet.address)
+
+        if (v2cApeBal.gte(ethers.utils.parseEther("100"))) {
+            const tx = await v2cApe.withdraw(v2cApeBal)
+            await tx.wait(1)
+            logger.info(`withdraw ${ethers.utils.formatEther(v2cApeBal)} v2 cape to ape.`)
+        }
+    }
 
     logger.info("start swap ape fee to eth.")
-    const uniswapV3Quoter = runtime.provider.connectContract(ParaspaceMM.UniswapV3Quoter)
-    const uniswapV3Router: Types.IUniSwapV3Router02 = runtime.provider.connectContract(
-        ParaspaceMM.UniswapV3Router,
+    const uniswapV3Quoter = runtime.v1Provider.connectContract(ParaSpaceEthMM.UniswapV3Quoter)
+    const uniswapV3Router: ComTypes.IUniSwapV3Router02 = runtime.v1Provider.connectContract(
+        ParaSpaceEthMM.UniswapV3Router,
         runtime.wallet
     )
 
@@ -28,12 +43,14 @@ export const swapApeFeeToETH = async () => {
         ["address", "uint24", "address"],
         [ERC20.APE, APE_WETH_FEE, ERC20.WETH]
     )
-    const ape: Types.ERC20 = runtime.provider.connectFactory(
-        Factories.ERC20__factory,
+    const ape: ComTypes.MintableERC20 = runtime.v1Provider.connectFactory(
+        ComFactories.MintableERC20__factory,
         ERC20.APE,
         runtime.wallet
     )
     const amountIn = await ape.balanceOf(runtime.wallet.address)
+
+    if (amountIn.lte(ethers.utils.parseEther("200"))) return
 
     try {
         if ((await ape.allowance(runtime.wallet.address, uniswapV3Router.address)).lt(amountIn)) {
@@ -61,7 +78,7 @@ export const swapApeFeeToETH = async () => {
         )
         const infoMsg = `Do swap AC fee to ETH succeed, tx ${tx.hash}`
 
-        const weth = runtime.provider.connectContract(ParaspaceMM.WETH, runtime.wallet)
+        const weth = runtime.v1Provider.connectContract(ParaSpaceEthMM.WETH, runtime.wallet)
         const wethBal = await weth.balanceOf(runtime.wallet.address)
         if (wethBal.gte(ethers.utils.parseEther("0.5"))) {
             const tx = await weth.withdraw(wethBal)
@@ -84,7 +101,7 @@ export const swapApeFeeToETH = async () => {
                 {
                     name: "bot balance",
                     value: ethers.utils.formatEther(
-                        await runtime.provider.getProvider().getBalance(runtime.wallet.address)
+                        await runtime.v1Provider.getProvider().getBalance(runtime.wallet.address)
                     )
                 }
             ])
