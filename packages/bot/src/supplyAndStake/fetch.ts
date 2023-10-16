@@ -2,7 +2,7 @@ import { mapErrMsg, sameAddress } from "@para-space/utils"
 import { logger } from "@para-space/utils"
 import { BigNumber, ethers } from "ethers"
 import { chunk } from "lodash"
-import { ComFactories, ComTypes, ParaSpaceEthMM, Provider } from "paraspace-provider"
+import { ComFactories, ComTypes, EthTypes, ParaSpaceEthMM, Provider } from "paraspace-provider"
 import { APE_STAKING_POOL_ID } from "../constant"
 import { runtime } from "../runtime"
 import { strategy } from "../strategy"
@@ -40,7 +40,8 @@ const validateBAKCOwnerAndApproved = async (
     )
     const bakcOwner = await bakc.ownerOf(stakeBakc.tokenId)
     const nBakcOwner = await nBakc.ownerOf(stakeBakc.tokenId)
-    const isApproved = await bakc.isApprovedForAll(bakcOwner, runtime.contracts.pool)
+    const pool: EthTypes.IPool = provider.connectContract(ParaSpaceEthMM.Pool, runtime.wallet)
+    const isApproved = await bakc.isApprovedForAll(bakcOwner, pool.address)
     return (
         (sameAddress(stakeBakc.pair.mainTokenOwner, bakcOwner) ||
             sameAddress(stakeBakc.pair.mainTokenOwner, nBakcOwner)) &&
