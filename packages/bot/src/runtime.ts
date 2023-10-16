@@ -36,7 +36,6 @@ export let runtime: {
     contracts: {
         BAKC: ContractAddress
         apeCoinStaking: ContractAddress
-        pool: ContractAddress
     }
     v1Contracts: {
         nBAYC: ContractAddress
@@ -244,8 +243,7 @@ export namespace Runtime {
             },
             contracts: {
                 BAKC: protocol.BAKC,
-                apeCoinStaking: protocol.apeCoinStaking,
-                pool: protocol.pool
+                apeCoinStaking: protocol.apeCoinStaking
             },
             v1Contracts,
             v2Contracts,
