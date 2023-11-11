@@ -6,7 +6,7 @@ export const getOptMaxFeePerGas = async (
 ): Promise<BigNumber> => {
   curGasPrice
   if (!isMainnet) return ethers.utils.parseUnits("1000", "gwei")
-  const maxGasPrice = ethers.utils.parseUnits("25", "gwei")
+  const maxGasPrice = ethers.utils.parseUnits("24", "gwei")
   return maxGasPrice
   // const midGasPrice = ethers.utils.parseUnits("25", "gwei")
   // if (curGasPrice.gte(maxGasPrice)) return maxGasPrice
