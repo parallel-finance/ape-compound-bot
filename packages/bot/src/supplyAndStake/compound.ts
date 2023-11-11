@@ -110,6 +110,8 @@ const claimApeAndCompoundWithSimulation = async (
             await provider.getProvider().getGasPrice(),
             runtime.isMainnet
         )
+        // maxPriorityFeePerGas: ethers.utils.parseUnits("2", "gwei"),
+        // nonce:
     }
     const tx = info.isBakc
         ? await pool.claimPairedApeAndCompound(nftAsset, users, nftPairs, options)
@@ -184,6 +186,20 @@ export function splitCompoundInfos(compoundInfo: ValidCompoundInfo, limit: numbe
     for (const [collection, collectionInfo] of Object.entries(compoundInfo)) {
         if (!compoundInfo || collectionInfo.users.length === 0) {
             logger.info(`No ${collection} to claim and compound`)
+            continue
+        }
+        if (
+            collectionInfo.isBakc
+                ? collectionInfo.nftPairs.flat().length < 3
+                : collectionInfo.tokenIds.flat().length < 3
+        ) {
+            logger.info(
+                `No ${collection} to claim and compound, token count: ${
+                    collectionInfo.isBakc
+                        ? collectionInfo.nftPairs.flat().length
+                        : collectionInfo.tokenIds.flat().length
+                } less than 3`
+            )
             continue
         }
 

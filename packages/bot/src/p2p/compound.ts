@@ -7,6 +7,10 @@ import { GLOBAL_OVERRIDES, StakingType } from "../constant"
 
 export const splitOrders = (orders: SimpleMatchOrder[], limit: number): SimpleMatchOrder[][] => {
     let orderAmount = orders.length
+    if (orderAmount < 3) {
+        logger.info(`valid p2p order count: ${orderAmount}, less than 3`)
+        return []
+    }
     let batchOrders: SimpleMatchOrder[][] = []
     while (orderAmount > 0) {
         batchOrders.push(orders.slice(0, limit))
