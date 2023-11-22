@@ -80,7 +80,7 @@ export namespace Runtime {
             try {
                 let hasStarted = false
                 const curHour = new Date().getUTCHours() + 8
-                // only run at UTC+8 14:00
+                // only run at UTC+8 15:00
                 if (curHour === 15) {
                     if (!hasStarted) {
                         logger.info("start to run...")
@@ -88,7 +88,7 @@ export namespace Runtime {
                             runtime.wallet.address,
                             ethers.utils.parseEther("0.2").toString()
                         )
-                        await worker()
+                        // await worker()
                         heartBeat()
                         logger.info(
                             `don't worry, still alive... interval ${
