@@ -81,25 +81,25 @@ export namespace Runtime {
                 let hasStarted = false
                 const curHour = new Date().getUTCHours() + 8
                 // only run at UTC+8 14:00
-                if (curHour === 15) {
-                    if (!hasStarted) {
-                        logger.info("start to run...")
-                        await checkBalanceSufficient(
-                            runtime.wallet.address,
-                            ethers.utils.parseEther("0.2").toString()
-                        )
-                        await worker()
-                        heartBeat()
-                        logger.info(
-                            `don't worry, still alive... interval ${
-                                runtime.interval.scan / 60 / 1000
-                            } m`
-                        )
-                        hasStarted = true
-                    }
-                } else {
-                    hasStarted = false
+                // if (curHour === 15) {
+                if (!hasStarted) {
+                    logger.info("start to run...")
+                    await checkBalanceSufficient(
+                        runtime.wallet.address,
+                        ethers.utils.parseEther("0.2").toString()
+                    )
+                    // await worker()
+                    heartBeat()
+                    logger.info(
+                        `don't worry, still alive... interval ${
+                            runtime.interval.scan / 60 / 1000
+                        } m`
+                    )
+                    hasStarted = true
                 }
+                // } else {
+                //     hasStarted = false
+                // }
             } catch (e) {
                 if (retryCount-- > 0) {
                     logger.error(`process error: ${mapErrMsg(e)}`)

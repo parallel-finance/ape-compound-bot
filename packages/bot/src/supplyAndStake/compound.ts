@@ -113,6 +113,9 @@ const claimApeAndCompoundWithSimulation = async (
         // maxPriorityFeePerGas: ethers.utils.parseUnits("2", "gwei"),
         // nonce:
     }
+    console.log(
+        pool.interface.encodeFunctionData("claimApeAndCompound", [nftAsset, users, tokenIds])
+    )
     const tx = info.isBakc
         ? await pool.claimPairedApeAndCompound(nftAsset, users, nftPairs, options)
         : await pool.claimApeAndCompound(nftAsset, users, tokenIds, options)
