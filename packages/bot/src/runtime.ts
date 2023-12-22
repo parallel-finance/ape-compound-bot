@@ -88,7 +88,7 @@ export namespace Runtime {
                         runtime.wallet.address,
                         ethers.utils.parseEther("0.2").toString()
                     )
-                    // await worker()
+                    await worker()
                     heartBeat()
                     logger.info(
                         `don't worry, still alive... interval ${
